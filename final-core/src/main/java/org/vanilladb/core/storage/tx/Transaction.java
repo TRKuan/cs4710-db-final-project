@@ -15,13 +15,19 @@
  ******************************************************************************/
 package org.vanilladb.core.storage.tx;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.vanilladb.core.server.VanillaDb;
+import org.vanilladb.core.sql.Constant;
 import org.vanilladb.core.storage.buffer.BufferMgr;
+import org.vanilladb.core.storage.metadata.TableInfo;
+import org.vanilladb.core.storage.record.RecordFile;
+import org.vanilladb.core.storage.record.RecordId;
 import org.vanilladb.core.storage.tx.concurrency.ConcurrencyMgr;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
@@ -39,6 +45,8 @@ public class Transaction {
 	private List<TransactionLifecycleListener> lifecycleListeners;
 	private long txNum;
 	private boolean readOnly;
+	private HashMap<RecordField, Constant> workspace;
+	private boolean certified;
 
 	/**
 	 * Creates a new transaction and associates it with a recovery manager, a
@@ -68,6 +76,8 @@ public class Transaction {
 		this.bufferMgr = (BufferMgr) bufferMgr;
 		this.txNum = txNum;
 		this.readOnly = readOnly;
+		this.workspace = new HashMap<RecordField, Constant>();
+		this.certified = false;
 
 		lifecycleListeners = new LinkedList<TransactionLifecycleListener>();
 		// XXX: A transaction manager must be added before a recovery manager to
@@ -101,6 +111,9 @@ public class Transaction {
 	 * locks, and unpins any pinned blocks.
 	 */
 	public void commit() {
+		upgradeWriteLock();
+		certify();
+		commitWorkspace();
 		for (TransactionLifecycleListener l : lifecycleListeners)
 			l.onTxCommit(this);
 
@@ -151,5 +164,65 @@ public class Transaction {
 
 	public BufferMgr bufferMgr() {
 		return bufferMgr;
+	}
+	
+	class RecordField {
+		public String tblName;
+		public RecordId rid;
+		public String fldName;
+		
+		public RecordField(String tblName, RecordId rid, String fldName) {
+			this.tblName = tblName;
+			this.rid = rid;
+			this.fldName = fldName;
+		}
+		
+		@Override
+		public int hashCode() {
+			return tblName.hashCode() + rid.hashCode() + fldName.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this)
+				return true;
+			if (obj == null || !(obj.getClass().equals(RecordField.class)))
+				return false;
+			RecordField rf = (RecordField) obj;
+			return tblName.equals(rf.tblName) && rid.equals(rf.rid) && fldName.equals(rf.fldName);
+		}
+	}
+	
+	public void certify() {
+		this.certified = true;
+	}
+	
+	public boolean certified() {
+		return this.certified;
+	}
+	
+	public void putVal(String tblName, RecordId rid, String fldName, Constant val) {
+		workspace.put(new RecordField(tblName, rid, fldName), val);
+	}
+	
+	public Constant getVal(String tblName, RecordId rid, String fldName) {
+		return workspace.get(new RecordField(tblName, rid, fldName));
+	}
+	
+	private void upgradeWriteLock() {
+		for (RecordField rf: workspace.keySet())
+			this.concurMgr.modifyRecord(rf.rid);
+	}
+	
+	private void commitWorkspace() {
+		for (Map.Entry<RecordField, Constant> entry: workspace.entrySet()) {
+			RecordField rfield = entry.getKey();
+			Constant val = entry.getValue();
+			TableInfo ti = VanillaDb.catalogMgr().getTableInfo(rfield.tblName, this);
+			RecordFile rfile = ti.open(this, true);
+			rfile.moveToRecordId(rfield.rid);
+			rfile.setVal(rfield.fldName, val);
+			rfile.close();
+		}
 	}
 }

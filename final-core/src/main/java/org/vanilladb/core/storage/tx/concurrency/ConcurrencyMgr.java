@@ -84,6 +84,8 @@ public abstract class ConcurrencyMgr implements TransactionLifecycleListener {
 	 *            the record id
 	 */
 	public abstract void modifyRecord(RecordId recId);
+	
+	public abstract void shadowModifyRecord(RecordId recId);
 
 	/**
 	 * Sets lock according to the transaction's isolation level for the reading

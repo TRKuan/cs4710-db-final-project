@@ -129,6 +129,7 @@ public class VanillaDb {
 		// the first transaction for initializing the system
 		Transaction initTx = txMgr.newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
+		initTx.certify();
 
 		/*
 		 * initialize the catalog manager to ensure the recovery process can get

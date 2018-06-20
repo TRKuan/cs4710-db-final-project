@@ -99,6 +99,13 @@ public class ReadCommittedConcurrencyMgr extends ConcurrencyMgr {
 		// releases S lock to allow unrepeatable Read
 		lockTbl.release(recId, txNum, LockTable.S_LOCK);
 	}
+	
+	@Override
+	public void shadowModifyRecord(RecordId recId){
+		lockTbl.ixLock(recId.block().fileName(), txNum);
+		lockTbl.ixLock(recId.block(), txNum);
+		lockTbl.shadowXLock(recId, txNum);
+	}
 
 	@Override
 	public void modifyIndex(String dataFileName) {

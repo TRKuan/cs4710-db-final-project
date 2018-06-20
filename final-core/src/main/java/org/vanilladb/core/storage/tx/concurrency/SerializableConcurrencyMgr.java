@@ -74,6 +74,13 @@ public class SerializableConcurrencyMgr extends ConcurrencyMgr {
 		lockTbl.ixLock(recId.block(), txNum);
 		lockTbl.xLock(recId, txNum);
 	}
+	
+	@Override
+	public void shadowModifyRecord(RecordId recId){
+		lockTbl.ixLock(recId.block().fileName(), txNum);
+		lockTbl.ixLock(recId.block(), txNum);
+		lockTbl.shadowXLock(recId, txNum);
+	}
 
 	@Override
 	public void readRecord(RecordId recId) {
