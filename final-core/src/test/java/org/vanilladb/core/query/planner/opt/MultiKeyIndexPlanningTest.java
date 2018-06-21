@@ -57,7 +57,7 @@ private static Logger logger = Logger.getLogger(MultiKeyIndexPlanningTest.class.
 	private static final int KEY_MAX = 20;
 	
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(MultiKeyIndexPlanningTest.class);
 		
 		generateTestingData();
@@ -72,7 +72,7 @@ private static Logger logger = Logger.getLogger(MultiKeyIndexPlanningTest.class.
 			logger.info("FINISH MULTI-KEY INDEXES QUERY TEST");
 	}
 	
-	private static void generateTestingData() {
+	private static void generateTestingData() throws Exception {
 		if (logger.isLoggable(Level.INFO))
 			logger.info("loading data");
 		
@@ -173,7 +173,7 @@ private static Logger logger = Logger.getLogger(MultiKeyIndexPlanningTest.class.
 	}
 
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
 		tx.commit();
 	}
 	

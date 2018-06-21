@@ -106,7 +106,8 @@ public class MaterializeTest {
 	}
 	
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
+		//TODO:no idea
 		tx.commit();
 		tx = null;
 	}

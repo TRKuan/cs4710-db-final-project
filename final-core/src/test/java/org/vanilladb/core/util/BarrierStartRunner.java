@@ -32,11 +32,11 @@ public abstract class BarrierStartRunner extends Thread {
 
 	public abstract void runTask();
 
-	public void beforeTask() {
+	public void beforeTask() throws Exception {
 
 	}
 
-	public void afterTask() {
+	public void afterTask() throws Exception {
 
 	}
 

@@ -56,7 +56,7 @@ public class BTreePageTest {
 	}
 	
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(BTreePageTest.class);
 		RecoveryMgr.enableLogging(false);
 		
@@ -88,7 +88,7 @@ public class BTreePageTest {
 	}
 	
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
 		tx.commit();
 		tx = null;
 	}

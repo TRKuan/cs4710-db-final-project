@@ -59,7 +59,7 @@ public class BTreeLeafTest {
 	private Transaction tx;
 	
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(BTreeLeafTest.class);
 		RecoveryMgr.enableLogging(false);
 		
@@ -101,7 +101,7 @@ public class BTreeLeafTest {
 	}
 	
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
 		tx.commit();
 		tx = null;
 	}

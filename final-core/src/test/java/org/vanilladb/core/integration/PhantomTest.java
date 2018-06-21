@@ -25,7 +25,7 @@ public class PhantomTest {
 private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getName());
 	
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(PhantomTest.class);
 		loadTestbed();
 		
@@ -39,7 +39,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 			logger.info("FINISH PHANTOM TEST");
 	}
 	
-	private static void loadTestbed() {
+	private static void loadTestbed() throws Exception {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
 		Planner planner = VanillaDb.newPlanner();
@@ -103,7 +103,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 	private static class TxClient extends Thread {
 		protected Transaction tx;
 		private CyclicBarrier barrier;
-		private boolean success = false;
+		private boolean success;
 		
 		public TxClient(Transaction tx, CyclicBarrier barrier) {
 			this.tx = tx;
@@ -112,24 +112,23 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 
 		@Override
 		public void run() {
-			while(!success) {
-				try {
-					barrier.await();
-					phase1();
-					barrier.await();
-					phase2();
-					barrier.await();
-					phase3();
-					success = true;
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+			try {
+				barrier.await();
+				phase1();
+				barrier.await();
+				phase2();
+				barrier.await();
+				phase3();
+				
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
+			success = true;
 		}
 		
 		public void phase1() { };
-		public void phase2() { };
-		public void phase3() { };
+		public void phase2() throws Exception { };
+		public void phase3() throws Exception { };
 		
 		public boolean isSuccess() { return success; }
 	}
@@ -149,7 +148,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 		}
 		
 		@Override
-		public void phase3() {
+		public void phase3() throws Exception {
 			Constant newMaxScore = queryMaxScore();
 			isSame = maxScore.equals(newMaxScore);
 			tx.commit();
@@ -177,7 +176,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 		}
 		
 		@Override
-		public void phase2() {
+		public void phase2() throws Exception {
 			try {
 				Planner planner = VanillaDb.newPlanner();
 				planner.executeUpdate("UPDATE test SET age = 20 WHERE age = 23", tx);

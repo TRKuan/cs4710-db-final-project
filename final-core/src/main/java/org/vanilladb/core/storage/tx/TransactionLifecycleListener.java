@@ -17,7 +17,7 @@ package org.vanilladb.core.storage.tx;
 
 public interface TransactionLifecycleListener {
 
-	void onTxCommit(Transaction tx);
+	void onTxCommit(Transaction tx) throws Exception;
 
 	void onTxRollback(Transaction tx);
 

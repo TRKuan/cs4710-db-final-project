@@ -54,7 +54,7 @@ public class IndexUpdatePlannerTest {
 	private static final String TABLE_NAME = "indextest";
 	
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(IndexUpdatePlannerTest.class);
 		
 		// create and populate the indexed temp table

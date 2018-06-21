@@ -27,13 +27,13 @@ public interface RemoteConnection extends Remote {
 
 	RemoteStatement createStatement() throws RemoteException;
 
-	void close() throws RemoteException;
+	void close() throws RemoteException, Exception;
 
 	void setAutoCommit(boolean autoCommit) throws RemoteException;
 
-	void setReadOnly(boolean readOnly) throws RemoteException;
+	void setReadOnly(boolean readOnly) throws RemoteException, Exception;
 
-	void setTransactionIsolation(int level) throws RemoteException;
+	void setTransactionIsolation(int level) throws RemoteException, Exception;
 
 	boolean getAutoCommit() throws RemoteException;
 
@@ -41,7 +41,7 @@ public interface RemoteConnection extends Remote {
 
 	int getTransactionIsolation() throws RemoteException;
 
-	void commit() throws RemoteException;
+	void commit() throws RemoteException, Exception;
 
 	void rollback() throws RemoteException;
 

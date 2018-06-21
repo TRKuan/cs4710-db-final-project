@@ -154,7 +154,12 @@ public class VanillaDb {
 		txMgr.createCheckpoint(initTx);
 
 		// commit the initializing transaction
-		initTx.commit();
+		try {
+			initTx.commit();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		// initializing checkpointing task
 		boolean doCheckpointing = CoreProperties.getLoader().getPropertyAsBoolean(

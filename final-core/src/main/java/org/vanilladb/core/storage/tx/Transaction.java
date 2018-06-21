@@ -120,7 +120,7 @@ public class Transaction {
 	 * locks, and unpins any pinned blocks.
 	 * @throws Exception 
 	 */
-	public void commit() {
+	public void commit() throws Exception {
 		for (TransactionLifecycleListener l : lifecycleListeners)
 			l.onTxCommit(this);
 	}

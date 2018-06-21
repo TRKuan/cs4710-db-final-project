@@ -67,8 +67,15 @@ public class MultiKeyIndexAlgebraTest {
 	@BeforeClass
 	public static void init() {
 		ServerInit.init(MultiKeyIndexAlgebraTest.class);
-		
-		generateTestingData();
+		boolean success = false;
+		while(!success) {
+			try {
+				generateTestingData();
+				success = true;
+			} catch (Exception e) {
+				//normal
+			}
+		}
 
 		if (logger.isLoggable(Level.INFO))
 			logger.info("BEGIN MULTI-KEY INDEXES QUERY TEST");
@@ -80,7 +87,7 @@ public class MultiKeyIndexAlgebraTest {
 			logger.info("FINISH MULTI-KEY INDEXES QUERY TEST");
 	}
 	
-	private static void generateTestingData() {
+	private static void generateTestingData() throws Exception {
 		if (logger.isLoggable(Level.INFO))
 			logger.info("loading data");
 		
@@ -181,7 +188,8 @@ public class MultiKeyIndexAlgebraTest {
 	}
 
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
+		//TODO:no idea
 		tx.commit();
 	}
 	

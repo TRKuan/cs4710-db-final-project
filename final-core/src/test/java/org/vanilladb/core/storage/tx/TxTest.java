@@ -71,7 +71,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testCommit() {
+	public void testCommit() throws Exception {
 		// Tx1 write 9999 at 0
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
@@ -96,7 +96,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testRollback() {
+	public void testRollback() throws Exception {
 		// Tx1 write 555 at 0
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
@@ -129,7 +129,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testEndStatement() {
+	public void testEndStatement() throws Exception {
 		// RC-Tx1 releases locks when ending a statement
 		BlockId blk = new BlockId(FILE_NAME, 2);
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(

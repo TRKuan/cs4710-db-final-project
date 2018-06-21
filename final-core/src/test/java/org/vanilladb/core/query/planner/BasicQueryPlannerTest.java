@@ -69,7 +69,7 @@ public class BasicQueryPlannerTest {
 	}
 	
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
 		tx.commit();
 		tx = null;
 	}

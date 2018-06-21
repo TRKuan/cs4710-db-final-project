@@ -151,11 +151,12 @@ class RemoteResultSetImpl extends UnicastRemoteObject implements
 
 	/**
 	 * Closes the result set by closing its scan.
+	 * @throws Exception 
 	 * 
 	 * @see org.vanilladb.core.remote.jdbc.RemoteResultSet#close()
 	 */
 	@Override
-	public void close() throws RemoteException {
+	public void close() throws Exception {
 		s.close();
 		if (rconn.getAutoCommit())
 			rconn.commit();

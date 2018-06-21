@@ -64,7 +64,7 @@ public class BTreeIndexTest {
 	private Transaction tx;
 
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(BTreeIndexTest.class);
 		RecoveryMgr.enableLogging(false);
 		catMgr = VanillaDb.catalogMgr();
@@ -118,7 +118,7 @@ public class BTreeIndexTest {
 	}
 
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
 		tx.commit();
 	}
 

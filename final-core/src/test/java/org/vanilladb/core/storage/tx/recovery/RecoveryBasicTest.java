@@ -62,7 +62,7 @@ public class RecoveryBasicTest {
 	private static BlockId blk;
 
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(RecoveryBasicTest.class);
 		
 		blk = new BlockId(fileName, 12);
@@ -92,7 +92,7 @@ public class RecoveryBasicTest {
 	}
 
 	@Before
-	public void setup() {
+	public void setup() throws Exception {
 
 		// reset initial values in the block
 		// Dummy txNum
@@ -204,7 +204,7 @@ public class RecoveryBasicTest {
 		recoveryTx.bufferMgr().unpin(buff);
 	}
 	@Test
-	public void testCrashingDuringRecovery() {
+	public void testCrashingDuringRecovery() throws Exception {
 
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 		Transaction tx2 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
@@ -276,7 +276,7 @@ public class RecoveryBasicTest {
 	}
 
 	@Test
-	public void testCrashingDuringRollBack() {
+	public void testCrashingDuringRollBack() throws Exception {
 
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 		Transaction tx2 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
@@ -349,7 +349,7 @@ public class RecoveryBasicTest {
 
 	}
 	@Test
-	public void testCheckpoint() {
+	public void testCheckpoint() throws Exception {
 
 		CyclicBarrier startBarrier = new CyclicBarrier(5);
 		CyclicBarrier endBarrier = new CyclicBarrier(5);
@@ -437,7 +437,7 @@ public class RecoveryBasicTest {
 		}
 
 		@Override
-		public void beforeTask() {
+		public void beforeTask() throws Exception {
 			tx = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 			txNum = tx.getTransactionNumber();
 			buff = tx.bufferMgr().pin(blk);
@@ -451,7 +451,7 @@ public class RecoveryBasicTest {
 		}
 
 		@Override
-		public void afterTask() {
+		public void afterTask() throws Exception {
 			doSomething(afterTask);
 
 		}
@@ -461,7 +461,7 @@ public class RecoveryBasicTest {
 
 		}
 
-		private void doSomething(int order) {
+		private void doSomething(int order) throws Exception {
 			switch (order) {
 			case 0:
 				// do not thing
@@ -477,7 +477,7 @@ public class RecoveryBasicTest {
 
 	}
 	@Test
-	public void testBTreeIndexRecovery() {
+	public void testBTreeIndexRecovery() throws Exception {
 		// The first tx inserts records to the index
 		Transaction tx = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 		IndexInfo ii = md.getIndexInfo(dataTableName, "cid", tx).get(0);

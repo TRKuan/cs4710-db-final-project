@@ -95,7 +95,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 	// }
 
 	@Override
-	public void onTxCommit(Transaction tx) {
+	public void onTxCommit(Transaction tx) throws Exception {
 
 		// activeTxsLock.readLock().lock();
 		// try {
@@ -140,7 +140,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 			
 		}else{
 			//(backup)
-			//throw new Exception("Validation failed! Do backup.");
+			throw new Exception("Validation failed! Do backup.");
 			
 		}
 		

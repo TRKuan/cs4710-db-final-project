@@ -37,7 +37,7 @@ public interface RemoteResultSet extends Remote {
 
 	RemoteMetaData getMetaData() throws RemoteException;
 
-	void close() throws RemoteException;
+	void close() throws RemoteException, Exception;
 
 	void beforeFirst() throws RemoteException;
 }

@@ -59,7 +59,7 @@ public class HashIndexTest {
 	private Transaction tx;
 
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(HashIndexTest.class);
 		RecoveryMgr.enableLogging(false);
 		md = VanillaDb.catalogMgr();
@@ -86,7 +86,7 @@ public class HashIndexTest {
 			logger.info("FINISH HASH INDEX TEST");
 	}
 	
-	private static void createSingleKeyIndex() {
+	private static void createSingleKeyIndex() throws Exception {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
 		
@@ -97,7 +97,7 @@ public class HashIndexTest {
 		tx.commit();
 	}
 	
-	private static void createMultiKeyIndex() {
+	private static void createMultiKeyIndex() throws Exception {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
 		
@@ -116,13 +116,13 @@ public class HashIndexTest {
 	}
 	
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
 		tx.commit();
 		tx = null;
 	}
 
 	@Test
-	public void testBasicOperations() {
+	public void testBasicOperations() throws Exception {
 		
 		createSingleKeyIndex();
 		
@@ -167,7 +167,7 @@ public class HashIndexTest {
 	}
 	
 	@Test
-	public void testMultiKeys() {
+	public void testMultiKeys() throws Exception {
 		
 		createMultiKeyIndex();
 		

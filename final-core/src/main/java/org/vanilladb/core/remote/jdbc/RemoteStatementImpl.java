@@ -57,11 +57,12 @@ class RemoteStatementImpl extends UnicastRemoteObject implements
 	/**
 	 * Executes the specified SQL update command. The method sends the command
 	 * to the update planner, which executes it.
+	 * @throws Exception 
 	 * 
 	 * @see RemoteStatement#executeUpdate(java.lang.String)
 	 */
 	@Override
-	public int executeUpdate(String cmd) throws RemoteException {
+	public int executeUpdate(String cmd) throws Exception {
 		try {
 			Transaction tx = rconn.getTransaction();
 			if (tx.isReadOnly())

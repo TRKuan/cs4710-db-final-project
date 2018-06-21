@@ -58,7 +58,7 @@ public class BasicQueryTest {
 	}
 	
 	@Test
-	public void testTable() {
+	public void testTable() throws Exception {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p = new TablePlan("student", tx);
@@ -80,7 +80,7 @@ public class BasicQueryTest {
 	}
 
 	@Test
-	public void testSelect() {
+	public void testSelect() throws Exception {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p1 = new TablePlan("student", tx);
@@ -99,7 +99,7 @@ public class BasicQueryTest {
 	}
 
 	@Test
-	public void testProject() {
+	public void testProject() throws Exception {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p1 = new TablePlan("student", tx);
@@ -129,7 +129,7 @@ public class BasicQueryTest {
 	}
 
 	@Test
-	public void testProduct() {
+	public void testProduct() throws Exception {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p1 = new TablePlan("student", tx);

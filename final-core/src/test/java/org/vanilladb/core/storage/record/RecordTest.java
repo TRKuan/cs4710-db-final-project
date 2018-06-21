@@ -59,7 +59,7 @@ public class RecordTest {
 			tableName2 = FILE_PREFIX + "course2";
 	
 	@BeforeClass
-	public static void init() {
+	public static void init() throws Exception {
 		ServerInit.init(RecordTest.class);
 		RecoveryMgr.enableLogging(false);
 
@@ -90,7 +90,7 @@ public class RecordTest {
 	}
 	
 	@After
-	public void finishTx() {
+	public void finishTx() throws Exception {
 		if (tx != null) {
 			tx.commit();
 			tx = null;

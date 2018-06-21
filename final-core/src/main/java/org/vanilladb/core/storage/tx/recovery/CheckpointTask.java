@@ -59,17 +59,33 @@ public class CheckpointTask extends Task {
 			logger.info("Start creating checkpoint");
 		if (MY_METHOD == METHOD_MONITOR) {
 			if (VanillaDb.txMgr().getNextTxNum() - lastTxNum > TX_COUNT_TO_CHECKPOINT) {
-				Transaction tx = VanillaDb.txMgr().newTransaction(
-						Connection.TRANSACTION_SERIALIZABLE, false);
-				VanillaDb.txMgr().createCheckpoint(tx);
-				tx.commit();
+				boolean success = false;
+				while(!success) {
+					try {
+						Transaction tx = VanillaDb.txMgr().newTransaction(
+								Connection.TRANSACTION_SERIALIZABLE, false);
+						VanillaDb.txMgr().createCheckpoint(tx);
+						tx.commit();
+						success = true;
+					} catch (Exception e) {
+						//normal
+					}
+				}
 				lastTxNum = VanillaDb.txMgr().getNextTxNum();
 			}
 		} else if (MY_METHOD == METHOD_PERIODIC) {
-			Transaction tx = VanillaDb.txMgr().newTransaction(
-					Connection.TRANSACTION_SERIALIZABLE, false);
-			VanillaDb.txMgr().createCheckpoint(tx);
-			tx.commit();
+			boolean success = false;
+			while(!success) {
+				try {
+					Transaction tx = VanillaDb.txMgr().newTransaction(
+							Connection.TRANSACTION_SERIALIZABLE, false);
+					VanillaDb.txMgr().createCheckpoint(tx);
+					tx.commit();
+					success = true;
+				} catch (Exception e) {
+					//normal
+				}
+			}
 		}
 		if (logger.isLoggable(Level.INFO))
 			logger.info("A checkpoint created");

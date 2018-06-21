@@ -27,5 +27,5 @@ public interface RemoteStatement extends Remote {
 
 	RemoteResultSet executeQuery(String qry) throws RemoteException;
 
-	int executeUpdate(String cmd) throws RemoteException;
+	int executeUpdate(String cmd) throws RemoteException, Exception;
 }
