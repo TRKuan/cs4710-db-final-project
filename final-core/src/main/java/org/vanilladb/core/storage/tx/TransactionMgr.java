@@ -17,17 +17,26 @@ package org.vanilladb.core.storage.tx;
 
 import java.lang.reflect.Constructor;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.xml.bind.ValidationEvent;
+
 import org.vanilladb.core.server.VanillaDb;
+import org.vanilladb.core.sql.Constant;
 import org.vanilladb.core.storage.buffer.BufferMgr;
 import org.vanilladb.core.storage.log.LogSeqNum;
+import org.vanilladb.core.storage.tx.Transaction.RecordField;
 import org.vanilladb.core.storage.tx.concurrency.ConcurrencyMgr;
+import org.vanilladb.core.storage.tx.concurrency.OptimisticConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.ReadCommittedConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.RepeatableReadConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.SerializableConcurrencyMgr;
@@ -55,6 +64,8 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		recoveryMgrCls = CoreProperties.getLoader().getPropertyAsClass(TransactionMgr.class.getName() + ".RECOVERY_MGR",
 				RecoveryMgr.class, RecoveryMgr.class);
 	}
+	
+	private static AtomicInteger tnc = new AtomicInteger(-1);
 
 	// Optimization for preventing becoming bottleneck when creating a
 	// transaction
@@ -66,6 +77,9 @@ public class TransactionMgr implements TransactionLifecycleListener {
 	// Old method for maintaining active transaction list
 	// When the above optimization ready, switch to that one
 	private Set<Long> activeTxs = new HashSet<Long>();
+	private ArrayList<Transaction> currentTxs = new ArrayList<Transaction>();
+	
+	
 
 	private long nextTxNum = 0;
 	// Optimization: Use separate lock for nextTxNum
@@ -89,6 +103,49 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		// } finally {
 		// activeTxsLock.readLock().unlock();
 		// }
+		
+		boolean valid = true;
+		synchronized (tnc) {
+			tx.setFinishTn(tnc.get());
+			
+			outerloop:
+			for (int i=tx.getStartTn()+1;i<=tx.getFinishTn();i++) {
+			    HashMap<RecordField, Constant> tWrite = currentTxs.get(i).getWriteSet();
+			    HashSet<RecordField> txRead = tx.getReadSet();
+			    
+			    for (RecordField k: txRead){
+			    	if(tWrite.containsKey(k)) {
+				    	valid = false;
+				    	break outerloop;
+				   	}
+			    }
+			    
+			}
+			if(valid) {
+				
+				if(!tx.isReadOnly()) {
+					tx.upgradeWriteLock();
+					tx.certify();
+					tx.commitwriteset();
+					if (logger.isLoggable(Level.FINE))
+						logger.fine("transaction " + tx.getTransactionNumber() + " committed");
+					
+					tx.setFinalTn(tnc.incrementAndGet());
+					currentTxs.add(tx);
+				}
+			}
+		}
+		if(valid) {
+			//(cleanup)
+			
+		}else{
+			//(backup)
+			//throw new Exception("Validation failed! Do backup.");
+			
+		}
+		
+			
+		
 
 		synchronized (this) {
 			activeTxs.remove(tx.getTransactionNumber());
@@ -107,7 +164,6 @@ public class TransactionMgr implements TransactionLifecycleListener {
 
 		synchronized (this) {
 			activeTxs.remove(tx.getTransactionNumber());
-
 		}
 	}
 
@@ -205,8 +261,9 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		BufferMgr bufferMgr = new BufferMgr(txNum);
 
 		// Create a concurrency manager
+		ConcurrencyMgr concurMgr = new OptimisticConcurrencyMgr();
+		/*
 		ConcurrencyMgr concurMgr = null;
-
 		switch (isolationLevel) {
 		case Connection.TRANSACTION_SERIALIZABLE:
 			try {
@@ -241,7 +298,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		default:
 			throw new UnsupportedOperationException("unsupported isolation level");
 		}
-
+		*/
 		Transaction tx = new Transaction(this, concurMgr, recoveryMgr, bufferMgr, readOnly, txNum);
 
 		// activeTxsLock.readLock().lock();
@@ -253,6 +310,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 
 		synchronized (this) {
 			activeTxs.add(tx.getTransactionNumber());
+			tx.setStartTn(tnc.get());
 		}
 		return tx;
 	}

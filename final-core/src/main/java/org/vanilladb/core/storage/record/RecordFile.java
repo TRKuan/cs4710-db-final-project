@@ -146,6 +146,7 @@ public class RecordFile implements Record {
 	public Constant getVal(String fldName) {
 		Constant val;
 		val = tx.getVal(ti.tableName(), currentRecordId(), fldName);
+		tx.putReadVal(ti.tableName(), currentRecordId(), fldName);
 		if (val != null)
 			return val;
 		return rp.getVal(fldName);
@@ -170,7 +171,7 @@ public class RecordFile implements Record {
 			throw new SchemaIncompatibleException();
 		if (!tx.certified() && !isTempTable()) {
 			tx.concurrencyMgr().shadowModifyRecord(currentRecordId());
-			tx.putVal(ti.tableName(), currentRecordId(), fldName, v);
+			tx.putWriteVal(ti.tableName(), currentRecordId(), fldName, v);
 		} else {
 			rp.setVal(fldName, v);
 		}

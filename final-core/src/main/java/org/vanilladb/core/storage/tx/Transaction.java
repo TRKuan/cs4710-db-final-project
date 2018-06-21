@@ -16,9 +16,11 @@
 package org.vanilladb.core.storage.tx;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,8 +47,14 @@ public class Transaction {
 	private List<TransactionLifecycleListener> lifecycleListeners;
 	private long txNum;
 	private boolean readOnly;
-	private HashMap<RecordField, Constant> workspace;
+	private HashMap<RecordField, Constant> writeset;
+	private HashSet<RecordField> readset;
 	private boolean certified;
+	
+	private int startTn = 0;
+	private int midTn = 0;
+	private int finishTn = 0;
+	private int finalTn = 0;
 
 	/**
 	 * Creates a new transaction and associates it with a recovery manager, a
@@ -76,7 +84,8 @@ public class Transaction {
 		this.bufferMgr = (BufferMgr) bufferMgr;
 		this.txNum = txNum;
 		this.readOnly = readOnly;
-		this.workspace = new HashMap<RecordField, Constant>();
+		this.writeset = new HashMap<RecordField, Constant>();
+		this.readset = new HashSet<RecordField>();
 		this.certified = false;
 
 		lifecycleListeners = new LinkedList<TransactionLifecycleListener>();
@@ -109,16 +118,11 @@ public class Transaction {
 	 * Commits the current transaction. Flushes all modified blocks (and their
 	 * log records), writes and flushes a commit record to the log, releases all
 	 * locks, and unpins any pinned blocks.
+	 * @throws Exception 
 	 */
 	public void commit() {
-		upgradeWriteLock();
-		certify();
-		commitWorkspace();
 		for (TransactionLifecycleListener l : lifecycleListeners)
 			l.onTxCommit(this);
-
-		if (logger.isLoggable(Level.FINE))
-			logger.fine("transaction " + txNum + " committed");
 	}
 
 	/**
@@ -201,21 +205,24 @@ public class Transaction {
 		return this.certified;
 	}
 	
-	public void putVal(String tblName, RecordId rid, String fldName, Constant val) {
-		workspace.put(new RecordField(tblName, rid, fldName), val);
+	public void putWriteVal(String tblName, RecordId rid, String fldName, Constant val) {
+		writeset.put(new RecordField(tblName, rid, fldName), val);
 	}
 	
+	public void putReadVal(String tblName, RecordId rid, String fldName) {
+		readset.add(new RecordField(tblName, rid, fldName));
+	}
 	public Constant getVal(String tblName, RecordId rid, String fldName) {
-		return workspace.get(new RecordField(tblName, rid, fldName));
+		return writeset.get(new RecordField(tblName, rid, fldName));
 	}
 	
-	private void upgradeWriteLock() {
-		for (RecordField rf: workspace.keySet())
+	public void upgradeWriteLock() {
+		for (RecordField rf: writeset.keySet())
 			this.concurMgr.modifyRecord(rf.rid);
 	}
 	
-	private void commitWorkspace() {
-		for (Map.Entry<RecordField, Constant> entry: workspace.entrySet()) {
+	public void commitwriteset() {
+		for (Map.Entry<RecordField, Constant> entry: writeset.entrySet()) {
 			RecordField rfield = entry.getKey();
 			Constant val = entry.getValue();
 			TableInfo ti = VanillaDb.catalogMgr().getTableInfo(rfield.tblName, this);
@@ -224,5 +231,40 @@ public class Transaction {
 			rfile.setVal(rfield.fldName, val);
 			rfile.close();
 		}
+	}
+	
+	public void setStartTn(int tnc) {
+		this.startTn = tnc;
+	}
+	public void setFinishTn(int tnc) {
+		this.finishTn = tnc;
+	}
+	public void setMidTn(int tnc) {
+		this.midTn = tnc;
+	}
+	public void setFinalTn(int tnc) {
+		this.finalTn = tnc;
+	}
+
+	
+	public int getStartTn() {
+		return this.startTn;
+	}
+	public int getFinishTn() {
+		return this.finishTn;
+	}
+	public int getMidTn() {
+		return this.midTn;
+	}
+	public int getFinalTn() {
+		return this.finalTn;
+	}
+
+	
+	public HashSet<RecordField> getReadSet(){
+		return this.readset;
+	}
+	public HashMap<RecordField, Constant> getWriteSet(){
+		return this.writeset;
 	}
 }

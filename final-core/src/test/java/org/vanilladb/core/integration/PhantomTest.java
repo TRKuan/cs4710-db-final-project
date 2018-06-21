@@ -103,7 +103,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 	private static class TxClient extends Thread {
 		protected Transaction tx;
 		private CyclicBarrier barrier;
-		private boolean success;
+		private boolean success = false;
 		
 		public TxClient(Transaction tx, CyclicBarrier barrier) {
 			this.tx = tx;
@@ -112,18 +112,19 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 
 		@Override
 		public void run() {
-			try {
-				barrier.await();
-				phase1();
-				barrier.await();
-				phase2();
-				barrier.await();
-				phase3();
-				
-			} catch (Exception e) {
-				e.printStackTrace();
+			while(!success) {
+				try {
+					barrier.await();
+					phase1();
+					barrier.await();
+					phase2();
+					barrier.await();
+					phase3();
+					success = true;
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
-			success = true;
 		}
 		
 		public void phase1() { };
