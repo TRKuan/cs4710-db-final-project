@@ -16,25 +16,15 @@
 package org.vanilladb.core.storage.tx;
 
 import java.lang.reflect.Constructor;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.xml.bind.ValidationEvent;
-
 import org.vanilladb.core.server.VanillaDb;
-import org.vanilladb.core.sql.Constant;
 import org.vanilladb.core.storage.buffer.BufferMgr;
 import org.vanilladb.core.storage.log.LogSeqNum;
-import org.vanilladb.core.storage.tx.Transaction.RecordField;
 import org.vanilladb.core.storage.tx.concurrency.ConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.OptimisticConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.ReadCommittedConcurrencyMgr;
@@ -66,8 +56,6 @@ public class TransactionMgr implements TransactionLifecycleListener {
 				RecoveryMgr.class, RecoveryMgr.class);
 	}
 	
-	private static AtomicInteger tnc = new AtomicInteger(-1);
-
 	// Optimization for preventing becoming bottleneck when creating a
 	// transaction
 	// XXX: There is a potential risk for overflowing here
