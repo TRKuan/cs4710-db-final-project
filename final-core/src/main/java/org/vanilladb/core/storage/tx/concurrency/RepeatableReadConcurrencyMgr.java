@@ -21,6 +21,10 @@ import org.vanilladb.core.storage.tx.Transaction;
 
 public class RepeatableReadConcurrencyMgr extends ConcurrencyMgr {
 
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
+	
 	public RepeatableReadConcurrencyMgr(long txNumber) {
 		txNum = txNumber;
 	}

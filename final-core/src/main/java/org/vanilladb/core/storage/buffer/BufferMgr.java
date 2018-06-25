@@ -80,6 +80,10 @@ public class BufferMgr implements TransactionLifecycleListener {
 	public BufferMgr(long txNum) {
 		this.txNum = txNum;
 	}
+	
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
 
 	@Override
 	public void onTxCommit(Transaction tx) {

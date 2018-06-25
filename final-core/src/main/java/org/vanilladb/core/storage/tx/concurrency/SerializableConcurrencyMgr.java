@@ -21,6 +21,10 @@ import org.vanilladb.core.storage.tx.Transaction;
 
 public class SerializableConcurrencyMgr extends ConcurrencyMgr {
 
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
+	
 	public SerializableConcurrencyMgr(long txNumber) {
 		txNum = txNumber;
 	}

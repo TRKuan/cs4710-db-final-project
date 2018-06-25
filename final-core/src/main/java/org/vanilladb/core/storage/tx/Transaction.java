@@ -99,6 +99,10 @@ public class Transaction {
 		// <COMMIT 1>
 		// But the current algorithm can still recovery correctly during this
 		// scenario.
+		/*
+		 * Optimistic concurrency manager needs to be added first so it can validate first when commit
+		 */
+		addLifecycleListener(concurMgr);
 		addLifecycleListener(txMgr);
 		/*
 		 * A recover manager must be added before a concurrency manager. For
@@ -106,8 +110,11 @@ public class Transaction {
 		 * until the recovery procedure complete.
 		 */
 		addLifecycleListener(recoveryMgr);
-		addLifecycleListener(concurMgr);
+		//addLifecycleListener(concurMgr);
 		addLifecycleListener(bufferMgr);
+		
+		for (TransactionLifecycleListener l : lifecycleListeners)
+			l.onTxStart(this);
 	}
 
 	public void addLifecycleListener(TransactionLifecycleListener listener) {
@@ -123,6 +130,10 @@ public class Transaction {
 	public void commit() throws ValidationFaildException {
 		for (TransactionLifecycleListener l : lifecycleListeners)
 			l.onTxCommit(this);
+		
+		if (logger.isLoggable(Level.FINE))
+			logger.fine("transaction " + txNum + " committed");
+
 	}
 
 	/**
@@ -170,7 +181,7 @@ public class Transaction {
 		return bufferMgr;
 	}
 	
-	class RecordField {
+	public class RecordField {
 		public String tblName;
 		public RecordId rid;
 		public String fldName;

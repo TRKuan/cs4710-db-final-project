@@ -21,6 +21,10 @@ import org.vanilladb.core.storage.tx.Transaction;
 
 public class ReadCommittedConcurrencyMgr extends ConcurrencyMgr {
 
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
+	
 	public ReadCommittedConcurrencyMgr(long txNumber) {
 		txNum = txNumber;
 	}

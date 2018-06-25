@@ -77,10 +77,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 
 	// Old method for maintaining active transaction list
 	// When the above optimization ready, switch to that one
-	private Set<Long> activeTxs = new HashSet<Long>();
-	private ArrayList<Transaction> currentTxs = new ArrayList<Transaction>();
-	
-	
+	private Set<Long> activeTxs = new HashSet<Long>();	
 
 	private long nextTxNum = 0;
 	// Optimization: Use separate lock for nextTxNum
@@ -94,7 +91,14 @@ public class TransactionMgr implements TransactionLifecycleListener {
 	// public synchronized ArrayList<Transaction> getActiveTransactions() {
 	// return activeTxs;
 	// }
-
+	
+	@Override
+	public void onTxStart(Transaction tx) {
+		synchronized (this) {
+			activeTxs.add(tx.getTransactionNumber());
+		}
+	}
+	
 	@Override
 	public void onTxCommit(Transaction tx) throws ValidationFaildException {
 
@@ -104,53 +108,6 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		// } finally {
 		// activeTxsLock.readLock().unlock();
 		// }
-		
-		boolean valid = true;
-		synchronized (tnc) {
-			tx.setFinishTn(tnc.get());
-			
-			outerloop:
-			for (int i=tx.getStartTn()+1;i<=tx.getFinishTn();i++) {
-			    HashMap<RecordField, Constant> tWrite = currentTxs.get(i).getWriteSet();
-			    HashSet<RecordField> txRead = tx.getReadSet();
-			    
-			    for (RecordField k: txRead){
-			    	if(tWrite.containsKey(k)) {
-				    	valid = false;
-				    	break outerloop;
-				   	}
-			    }
-			    
-			}
-			if(valid) {
-				
-				if(!tx.isReadOnly()) {
-					tx.upgradeWriteLock();
-					tx.certify();
-					tx.commitwriteset();
-					if (logger.isLoggable(Level.FINE))
-						logger.fine("transaction " + tx.getTransactionNumber() + " committed");
-					
-					tx.setFinalTn(tnc.incrementAndGet());
-					currentTxs.add(tx);
-				}
-			}
-		}
-		if(valid) {
-			//(cleanup)
-			
-		}else{
-			//(backup)
-			tx.getWriteSet().clear();
-			tx.getReadSet().clear();
-			tx.setStartTn(tnc.get());
-			tx.setFinishTn(0);
-			throw new ValidationFaildException("Validation failed! Do backup.");
-			
-		}
-		
-			
-		
 
 		synchronized (this) {
 			activeTxs.remove(tx.getTransactionNumber());
@@ -313,10 +270,6 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		// activeTxsLock.readLock().unlock();
 		// }
 
-		synchronized (this) {
-			activeTxs.add(tx.getTransactionNumber());
-			tx.setStartTn(tnc.get());
-		}
 		return tx;
 	}
 }
