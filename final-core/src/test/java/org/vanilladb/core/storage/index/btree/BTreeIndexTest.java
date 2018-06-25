@@ -48,6 +48,7 @@ import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.metadata.index.IndexInfo;
 import org.vanilladb.core.storage.record.RecordId;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
 import junit.framework.Assert;
@@ -64,7 +65,7 @@ public class BTreeIndexTest {
 	private Transaction tx;
 
 	@BeforeClass
-	public static void init() throws Exception {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(BTreeIndexTest.class);
 		RecoveryMgr.enableLogging(false);
 		catMgr = VanillaDb.catalogMgr();
@@ -118,7 +119,7 @@ public class BTreeIndexTest {
 	}
 
 	@After
-	public void finishTx() throws Exception {
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 	}
 

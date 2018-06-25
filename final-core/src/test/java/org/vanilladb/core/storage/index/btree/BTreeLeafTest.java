@@ -35,6 +35,7 @@ import org.vanilladb.core.storage.index.SearchKeyType;
 import org.vanilladb.core.storage.index.SearchRange;
 import org.vanilladb.core.storage.record.RecordId;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
 import junit.framework.Assert;
@@ -59,7 +60,7 @@ public class BTreeLeafTest {
 	private Transaction tx;
 	
 	@BeforeClass
-	public static void init() throws Exception {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(BTreeLeafTest.class);
 		RecoveryMgr.enableLogging(false);
 		
@@ -101,7 +102,7 @@ public class BTreeLeafTest {
 	}
 	
 	@After
-	public void finishTx() throws Exception {
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 		tx = null;
 	}

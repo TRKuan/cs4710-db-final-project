@@ -47,6 +47,7 @@ import org.vanilladb.core.sql.Schema;
 import org.vanilladb.core.storage.index.IndexType;
 import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class IndexUpdatePlannerTest {
 	private static Logger logger = Logger.getLogger(IndexUpdatePlannerTest.class.getName());
@@ -54,7 +55,7 @@ public class IndexUpdatePlannerTest {
 	private static final String TABLE_NAME = "indextest";
 	
 	@BeforeClass
-	public static void init() throws Exception {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(IndexUpdatePlannerTest.class);
 		
 		// create and populate the indexed temp table

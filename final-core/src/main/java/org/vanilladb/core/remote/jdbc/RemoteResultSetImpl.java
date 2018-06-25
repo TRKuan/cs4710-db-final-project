@@ -26,6 +26,7 @@ import java.rmi.server.UnicastRemoteObject;
 import org.vanilladb.core.query.algebra.Plan;
 import org.vanilladb.core.query.algebra.Scan;
 import org.vanilladb.core.sql.Schema;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 /**
  * The RMI server-side implementation of RemoteResultSet.
@@ -156,7 +157,7 @@ class RemoteResultSetImpl extends UnicastRemoteObject implements
 	 * @see org.vanilladb.core.remote.jdbc.RemoteResultSet#close()
 	 */
 	@Override
-	public void close() throws Exception {
+	public void close() throws RemoteException, ValidationFaildException {
 		s.close();
 		if (rconn.getAutoCommit())
 			rconn.commit();

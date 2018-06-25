@@ -39,6 +39,7 @@ import org.vanilladb.core.storage.index.Index;
 import org.vanilladb.core.storage.index.IndexType;
 import org.vanilladb.core.storage.metadata.index.IndexInfo;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class CatalogTest {
 	private static Logger logger = Logger
@@ -72,7 +73,7 @@ public class CatalogTest {
 	}
 	
 	@After
-	public void finishTx() throws Exception {
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 		tx = null;
 	}

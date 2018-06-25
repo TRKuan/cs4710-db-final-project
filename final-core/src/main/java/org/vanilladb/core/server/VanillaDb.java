@@ -37,6 +37,7 @@ import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.metadata.statistics.StatMgr;
 import org.vanilladb.core.storage.tx.Transaction;
 import org.vanilladb.core.storage.tx.TransactionMgr;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.CheckpointTask;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 import org.vanilladb.core.util.CoreProperties;
@@ -156,8 +157,7 @@ public class VanillaDb {
 		// commit the initializing transaction
 		try {
 			initTx.commit();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		} catch (ValidationFaildException e) {
 			e.printStackTrace();
 		}
 

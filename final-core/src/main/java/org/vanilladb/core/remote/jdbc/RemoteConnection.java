@@ -18,6 +18,8 @@ package org.vanilladb.core.remote.jdbc;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
+
 /**
  * The RMI remote interface corresponding to Connection. The methods are
  * identical to those of Connection, except that they throw RemoteExceptions
@@ -27,13 +29,13 @@ public interface RemoteConnection extends Remote {
 
 	RemoteStatement createStatement() throws RemoteException;
 
-	void close() throws RemoteException, Exception;
+	void close() throws RemoteException, ValidationFaildException;
 
 	void setAutoCommit(boolean autoCommit) throws RemoteException;
 
-	void setReadOnly(boolean readOnly) throws RemoteException, Exception;
+	void setReadOnly(boolean readOnly) throws RemoteException, ValidationFaildException;
 
-	void setTransactionIsolation(int level) throws RemoteException, Exception;
+	void setTransactionIsolation(int level) throws RemoteException, ValidationFaildException;
 
 	boolean getAutoCommit() throws RemoteException;
 
@@ -41,7 +43,7 @@ public interface RemoteConnection extends Remote {
 
 	int getTransactionIsolation() throws RemoteException;
 
-	void commit() throws RemoteException, Exception;
+	void commit() throws RemoteException, ValidationFaildException;
 
 	void rollback() throws RemoteException;
 

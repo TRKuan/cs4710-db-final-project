@@ -43,6 +43,7 @@ import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.metadata.index.IndexInfo;
 import org.vanilladb.core.storage.record.RecordId;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
 public class HashIndexTest {
@@ -59,7 +60,7 @@ public class HashIndexTest {
 	private Transaction tx;
 
 	@BeforeClass
-	public static void init() throws Exception {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(HashIndexTest.class);
 		RecoveryMgr.enableLogging(false);
 		md = VanillaDb.catalogMgr();
@@ -86,7 +87,7 @@ public class HashIndexTest {
 			logger.info("FINISH HASH INDEX TEST");
 	}
 	
-	private static void createSingleKeyIndex() throws Exception {
+	private static void createSingleKeyIndex() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
 		
@@ -97,7 +98,7 @@ public class HashIndexTest {
 		tx.commit();
 	}
 	
-	private static void createMultiKeyIndex() throws Exception {
+	private static void createMultiKeyIndex() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
 		
@@ -116,13 +117,13 @@ public class HashIndexTest {
 	}
 	
 	@After
-	public void finishTx() throws Exception {
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 		tx = null;
 	}
 
 	@Test
-	public void testBasicOperations() throws Exception {
+	public void testBasicOperations() throws ValidationFaildException {
 		
 		createSingleKeyIndex();
 		
@@ -167,7 +168,7 @@ public class HashIndexTest {
 	}
 	
 	@Test
-	public void testMultiKeys() throws Exception {
+	public void testMultiKeys() throws ValidationFaildException {
 		
 		createMultiKeyIndex();
 		

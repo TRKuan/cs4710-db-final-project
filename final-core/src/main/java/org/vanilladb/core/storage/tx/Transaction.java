@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,6 +30,7 @@ import org.vanilladb.core.storage.metadata.TableInfo;
 import org.vanilladb.core.storage.record.RecordFile;
 import org.vanilladb.core.storage.record.RecordId;
 import org.vanilladb.core.storage.tx.concurrency.ConcurrencyMgr;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
 /**
@@ -120,7 +120,7 @@ public class Transaction {
 	 * locks, and unpins any pinned blocks.
 	 * @throws Exception 
 	 */
-	public void commit() throws Exception {
+	public void commit() throws ValidationFaildException {
 		for (TransactionLifecycleListener l : lifecycleListeners)
 			l.onTxCommit(this);
 	}

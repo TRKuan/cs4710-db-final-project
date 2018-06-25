@@ -36,6 +36,7 @@ import org.vanilladb.core.storage.metadata.TableInfo;
 import org.vanilladb.core.storage.metadata.statistics.StatMgr;
 import org.vanilladb.core.storage.record.RecordFile;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
 public class ServerInit {
@@ -229,7 +230,7 @@ public class ServerInit {
 	
 					tx.commit();
 					success = true;
-				}catch (Exception e) {
+				}catch (ValidationFaildException e) {
 					// normal
 				}
 			}
@@ -242,7 +243,7 @@ public class ServerInit {
 					RecoveryMgr.initializeSystem(tx);
 					tx.commit();
 					success = true;
-				}catch (Exception e) {
+				}catch (ValidationFaildException e) {
 					// normal
 				}
 			}

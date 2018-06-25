@@ -31,6 +31,7 @@ import org.vanilladb.core.sql.Schema;
 import org.vanilladb.core.sql.Type;
 import org.vanilladb.core.storage.file.BlockId;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
 import junit.framework.Assert;
@@ -56,7 +57,7 @@ public class BTreePageTest {
 	}
 	
 	@BeforeClass
-	public static void init() throws Exception {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(BTreePageTest.class);
 		RecoveryMgr.enableLogging(false);
 		
@@ -88,7 +89,7 @@ public class BTreePageTest {
 	}
 	
 	@After
-	public void finishTx() throws Exception {
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 		tx = null;
 	}

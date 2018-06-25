@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.server.task.Task;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.util.CoreProperties;
 
 /**
@@ -67,7 +68,7 @@ public class CheckpointTask extends Task {
 						VanillaDb.txMgr().createCheckpoint(tx);
 						tx.commit();
 						success = true;
-					} catch (Exception e) {
+					} catch (ValidationFaildException e) {
 						//normal
 					}
 				}
@@ -82,7 +83,7 @@ public class CheckpointTask extends Task {
 					VanillaDb.txMgr().createCheckpoint(tx);
 					tx.commit();
 					success = true;
-				} catch (Exception e) {
+				} catch (ValidationFaildException e) {
 					//normal
 				}
 			}

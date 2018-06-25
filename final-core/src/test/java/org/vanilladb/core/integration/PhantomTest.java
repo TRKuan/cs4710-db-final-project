@@ -21,12 +21,13 @@ import org.vanilladb.core.storage.buffer.BufferConcurrencyTest;
 import org.vanilladb.core.storage.tx.Transaction;
 import org.vanilladb.core.storage.tx.TransactionMgr;
 import org.vanilladb.core.storage.tx.concurrency.LockAbortException;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class PhantomTest {
 private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getName());
 	
 	@BeforeClass
-	public static void init() throws Exception {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(PhantomTest.class);
 		loadTestbed();
 		
@@ -40,7 +41,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 			logger.info("FINISH PHANTOM TEST");
 	}
 	
-	private static void loadTestbed() throws Exception {
+	private static void loadTestbed() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
 		Planner planner = VanillaDb.newPlanner();
@@ -126,16 +127,17 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 						barrier.await(200, TimeUnit.MILLISECONDS);
 					phase3();
 					success = true;
-				} catch (Exception e) {
+				} catch (ValidationFaildException e) {
+					//normal
+				} catch (Exception e){
 					e.printStackTrace();
 				}
 			}
-			
 		}
 		
 		public void phase1() { };
-		public void phase2() throws Exception { };
-		public void phase3() throws Exception { };
+		public void phase2() throws ValidationFaildException { };
+		public void phase3() throws ValidationFaildException { };
 		
 		public boolean isSuccess() { return success; }
 	}
@@ -155,7 +157,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 		}
 		
 		@Override
-		public void phase3() throws Exception {
+		public void phase3() throws ValidationFaildException {
 			Constant newMaxScore = queryMaxScore();
 			isSame = maxScore.equals(newMaxScore);
 			tx.commit();
@@ -183,7 +185,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 		}
 		
 		@Override
-		public void phase2() throws Exception {
+		public void phase2() throws ValidationFaildException {
 			try {
 				Planner planner = VanillaDb.newPlanner();
 				planner.executeUpdate("UPDATE test SET age = 20 WHERE age = 23", tx);

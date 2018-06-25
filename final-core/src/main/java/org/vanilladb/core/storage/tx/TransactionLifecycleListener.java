@@ -15,9 +15,11 @@
  ******************************************************************************/
 package org.vanilladb.core.storage.tx;
 
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
+
 public interface TransactionLifecycleListener {
 
-	void onTxCommit(Transaction tx) throws Exception;
+	void onTxCommit(Transaction tx) throws ValidationFaildException;
 
 	void onTxRollback(Transaction tx);
 

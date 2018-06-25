@@ -18,6 +18,8 @@ package org.vanilladb.core.remote.jdbc;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
+
 /**
  * The RMI remote interface corresponding to ResultSet. The methods are
  * identical to those of ResultSet, except that they throw RemoteExceptions
@@ -37,7 +39,7 @@ public interface RemoteResultSet extends Remote {
 
 	RemoteMetaData getMetaData() throws RemoteException;
 
-	void close() throws RemoteException, Exception;
+	void close() throws RemoteException, ValidationFaildException;
 
 	void beforeFirst() throws RemoteException;
 }

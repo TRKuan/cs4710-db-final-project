@@ -21,6 +21,7 @@ import java.sql.Connection;
 
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.util.CoreProperties;
 
 /**
@@ -71,7 +72,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 	 * @see RemoteConnection#close()
 	 */
 	@Override
-	public void close() throws Exception {
+	public void close() throws ValidationFaildException {
 		tx.commit();
 	}
 
@@ -91,7 +92,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 	 * @throws Exception 
 	 */
 	@Override
-	public void setReadOnly(boolean readOnly) throws Exception {
+	public void setReadOnly(boolean readOnly) throws RemoteException, ValidationFaildException {
 		if (this.readOnly != readOnly) {
 			tx.commit();
 			this.readOnly = readOnly;
@@ -113,7 +114,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 	 * @throws Exception 
 	 */
 	@Override
-	public void setTransactionIsolation(int level) throws Exception {
+	public void setTransactionIsolation(int level) throws RemoteException, ValidationFaildException {
 		if (getAutoCommit() != false)
 			throw new RemoteException(
 					"the auto-commit mode need to be set to false before changing the isolation level");
@@ -159,7 +160,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 	 * @throws Exception
 	 */
 	@Override
-	public void commit() throws Exception {
+	public void commit() throws RemoteException, ValidationFaildException {
 		tx.commit();
 		try {
 			tx = VanillaDb.txMgr().newTransaction(isolationLevel, readOnly);

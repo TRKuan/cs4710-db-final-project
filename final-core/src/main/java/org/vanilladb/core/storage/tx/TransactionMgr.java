@@ -96,7 +96,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 	// }
 
 	@Override
-	public void onTxCommit(Transaction tx) throws Exception {
+	public void onTxCommit(Transaction tx) throws ValidationFaildException {
 
 		// activeTxsLock.readLock().lock();
 		// try {

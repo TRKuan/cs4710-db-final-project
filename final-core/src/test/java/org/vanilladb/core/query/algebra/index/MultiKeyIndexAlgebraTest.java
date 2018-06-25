@@ -53,6 +53,7 @@ import org.vanilladb.core.storage.metadata.TableInfo;
 import org.vanilladb.core.storage.metadata.index.IndexInfo;
 import org.vanilladb.core.storage.record.RecordFile;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 import junit.framework.Assert;
 
@@ -72,7 +73,7 @@ public class MultiKeyIndexAlgebraTest {
 			try {
 				generateTestingData();
 				success = true;
-			} catch (Exception e) {
+			} catch (ValidationFaildException e) {
 				//normal
 			}
 		}
@@ -87,7 +88,7 @@ public class MultiKeyIndexAlgebraTest {
 			logger.info("FINISH MULTI-KEY INDEXES QUERY TEST");
 	}
 	
-	private static void generateTestingData() throws Exception {
+	private static void generateTestingData() throws ValidationFaildException {
 		if (logger.isLoggable(Level.INFO))
 			logger.info("loading data");
 		
@@ -188,8 +189,7 @@ public class MultiKeyIndexAlgebraTest {
 	}
 
 	@After
-	public void finishTx() throws Exception {
-		//TODO:no idea
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 	}
 	

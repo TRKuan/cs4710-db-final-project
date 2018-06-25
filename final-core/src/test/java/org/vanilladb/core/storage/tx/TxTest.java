@@ -36,6 +36,7 @@ import org.vanilladb.core.storage.buffer.Buffer;
 import org.vanilladb.core.storage.file.BlockId;
 import org.vanilladb.core.storage.log.LogSeqNum;
 import org.vanilladb.core.storage.tx.concurrency.LockAbortException;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class TxTest {
 	private static Logger logger = Logger.getLogger(TxTest.class.getName());
@@ -71,7 +72,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testCommit() throws Exception {
+	public void testCommit() throws ValidationFaildException {
 		// Tx1 write 9999 at 0
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
@@ -96,7 +97,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testRollback() throws Exception {
+	public void testRollback() throws ValidationFaildException {
 		// Tx1 write 555 at 0
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
@@ -129,7 +130,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testEndStatement() throws Exception {
+	public void testEndStatement() throws ValidationFaildException {
 		// RC-Tx1 releases locks when ending a statement
 		BlockId blk = new BlockId(FILE_NAME, 2);
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(

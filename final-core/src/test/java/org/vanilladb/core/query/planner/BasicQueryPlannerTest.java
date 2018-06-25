@@ -40,6 +40,7 @@ import org.vanilladb.core.server.ServerInit;
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.sql.Schema;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class BasicQueryPlannerTest {
 	private static Logger logger = Logger
@@ -69,7 +70,7 @@ public class BasicQueryPlannerTest {
 	}
 	
 	@After
-	public void finishTx() throws Exception {
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 		tx = null;
 	}

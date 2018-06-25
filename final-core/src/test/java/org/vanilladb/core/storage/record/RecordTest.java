@@ -44,6 +44,7 @@ import org.vanilladb.core.storage.file.BlockId;
 import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.metadata.TableInfo;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 
 public class RecordTest {
@@ -59,7 +60,7 @@ public class RecordTest {
 			tableName2 = FILE_PREFIX + "course2";
 	
 	@BeforeClass
-	public static void init() throws Exception {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(RecordTest.class);
 		RecoveryMgr.enableLogging(false);
 
@@ -90,7 +91,7 @@ public class RecordTest {
 	}
 	
 	@After
-	public void finishTx() throws Exception {
+	public void finishTx() throws ValidationFaildException {
 		if (tx != null) {
 			tx.commit();
 			tx = null;

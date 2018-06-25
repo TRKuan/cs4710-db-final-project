@@ -50,6 +50,7 @@ import org.vanilladb.core.sql.aggfn.MaxFn;
 import org.vanilladb.core.sql.aggfn.MinFn;
 import org.vanilladb.core.sql.aggfn.SumFn;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 /**
  * The test case for materialize query plan.
@@ -106,8 +107,7 @@ public class MaterializeTest {
 	}
 	
 	@After
-	public void finishTx() throws Exception {
-		//TODO:no idea
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 		tx = null;
 	}
