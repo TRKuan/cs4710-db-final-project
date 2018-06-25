@@ -153,7 +153,7 @@ public class TxTest {
 		tx2.commit();
 		tx1.commit();
 	}
-
+/* This test does not make sense with the optimistic concurrent control, the concurrencyMgr will not affect the tx order
 	@Test
 	public void testConcurrency() {
 		TxClientA thA = new TxClientA(0, 600);
@@ -176,8 +176,9 @@ public class TxTest {
 				+ "Tx D: read 2 start\n" + "Tx D: read 2 end\n";
 		assertEquals("TxTest: bad tx history", expected, result);
 	}
-
-	@Test
+*/
+/*	This test does not make sense with the optimistic concurrent control since there is no lock hence no deadlock
+    @Test
 	public void testDeadlock() {
 		TxClientB thB = new TxClientB(0, 400);
 		thB.start();
@@ -196,10 +197,11 @@ public class TxTest {
 		assertTrue("TxTest: bad tx history", !thB.isDeadlockAborted());
 		assertTrue("TxTest: bad tx history", thC.isDeadlockAborted());
 	}
-
+*/
 	synchronized static void appendToResult(String s) {
 		result += s + "\n";
 	}
+
 }
 
 abstract class TxClient extends Thread {

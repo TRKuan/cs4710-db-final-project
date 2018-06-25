@@ -3,6 +3,7 @@ package org.vanilladb.core.integration;
 import java.sql.Connection;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -112,18 +113,24 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 
 		@Override
 		public void run() {
-			try {
-				barrier.await();
-				phase1();
-				barrier.await();
-				phase2();
-				barrier.await();
-				phase3();
-				
-			} catch (Exception e) {
-				e.printStackTrace();
+			success = false;
+			while(!success){
+				try {
+					if(!barrier.isBroken())
+						barrier.await(200, TimeUnit.MILLISECONDS);
+					phase1();
+					if(!barrier.isBroken())
+						barrier.await(200, TimeUnit.MILLISECONDS);
+					phase2();
+					if(!barrier.isBroken())
+						barrier.await(200, TimeUnit.MILLISECONDS);
+					phase3();
+					success = true;
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
-			success = true;
+			
 		}
 		
 		public void phase1() { };

@@ -40,6 +40,7 @@ import org.vanilladb.core.storage.tx.concurrency.OptimisticConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.ReadCommittedConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.RepeatableReadConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.SerializableConcurrencyMgr;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 import org.vanilladb.core.util.CoreProperties;
 
@@ -140,7 +141,11 @@ public class TransactionMgr implements TransactionLifecycleListener {
 			
 		}else{
 			//(backup)
-			throw new Exception("Validation failed! Do backup.");
+			tx.getWriteSet().clear();
+			tx.getReadSet().clear();
+			tx.setStartTn(tnc.get());
+			tx.setFinishTn(0);
+			throw new ValidationFaildException("Validation failed! Do backup.");
 			
 		}
 		
