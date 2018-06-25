@@ -68,8 +68,9 @@ import org.vanilladb.core.storage.tx.recovery.RecoveryBasicTest;
 	TxTest.class,
 	
 	// storage.tx.concurrency
-	/*ConcurrencyTest.class,*/  // can not test optimistic concurrent control with lock
-	LockTableTest.class,
+	// can not test optimistic concurrent control with lock
+	/*ConcurrencyTest.class,
+	LockTableTest.class,*/
 	
 	// storage.tx.recovery
 	RecoveryBasicTest.class,
