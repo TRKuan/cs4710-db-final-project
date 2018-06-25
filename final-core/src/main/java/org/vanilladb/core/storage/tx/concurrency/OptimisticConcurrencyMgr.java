@@ -22,32 +22,49 @@ public class OptimisticConcurrencyMgr extends ConcurrencyMgr {
 	
 	@Override
 	public void onTxCommit(Transaction tx) throws ValidationFaildException {
+		tx.setMidTn(tnc.get());
 		boolean valid = true;
-		synchronized (tnc) {
-			tx.setFinishTn(tnc.get());
-			
-			for (int i=tx.getStartTn()+1;i<=tx.getFinishTn();i++) {
-			    HashMap<RecordField, Constant> tWrite = currentTxs.get(i).getWriteSet();
-			    HashSet<RecordField> txRead = tx.getReadSet();
-			    
-			    for (RecordField k: txRead){
-			    	if(tWrite.containsKey(k)) {
-				    	valid = false;
-				    	break;
-				   	}
-			    }
-			    if(!valid)break;
-			}
-			if(valid) {
-				if(!tx.isReadOnly()) {
-					tx.upgradeWriteLock();
-					tx.certify();
-					tx.commitwriteset();					
-					tx.setFinalTn(tnc.incrementAndGet());
-					currentTxs.add(tx);
+		for (int i=tx.getStartTn()+1;i<=tx.getMidTn();i++) {
+		    HashMap<RecordField, Constant> tWrite = currentTxs.get(i).getWriteSet();
+		    HashSet<RecordField> txRead = tx.getReadSet();
+		    
+		    for (RecordField k: txRead){
+		    	if(tWrite.containsKey(k)) {
+			    	valid = false;
+			    	break;
+			   	}
+		    }
+		    if(!valid)break;
+		}
+		//if still don't know it is invalid or not
+		if(valid){
+			synchronized (tnc) {
+				tx.setFinishTn(tnc.get());
+				
+				for (int i=tx.getMidTn()+1;i<=tx.getFinishTn();i++) {
+				    HashMap<RecordField, Constant> tWrite = currentTxs.get(i).getWriteSet();
+				    HashSet<RecordField> txRead = tx.getReadSet();
+				    
+				    for (RecordField k: txRead){
+				    	if(tWrite.containsKey(k)) {
+					    	valid = false;
+					    	break;
+					   	}
+				    }
+				    if(!valid)break;
+				}
+				if(valid) {
+					if(!tx.isReadOnly()) {
+						tx.upgradeWriteLock();
+						tx.certify();
+						tx.commitwriteset();					
+						tx.setFinalTn(tnc.incrementAndGet());
+						currentTxs.add(tx);
+					}
 				}
 			}
 		}
+		
 		if(valid) {
 			//(cleanup)
 		}else{
