@@ -54,8 +54,7 @@ public class OptimisticConcurrencyMgr extends ConcurrencyMgr {
 				    if(!valid)break;
 				}
 				if(valid) {
-					if(!tx.isReadOnly()) {
-						tx.upgradeWriteLock();
+					if(!tx.isReadOnly()&&!tx.getWriteSet().isEmpty()) {
 						tx.certify();
 						tx.commitwriteset();					
 						tx.setFinalTn(tnc.incrementAndGet());
