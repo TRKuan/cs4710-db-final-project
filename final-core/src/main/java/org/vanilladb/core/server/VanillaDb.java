@@ -37,6 +37,7 @@ import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.metadata.statistics.StatMgr;
 import org.vanilladb.core.storage.tx.Transaction;
 import org.vanilladb.core.storage.tx.TransactionMgr;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.CheckpointTask;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 import org.vanilladb.core.util.CoreProperties;
@@ -129,6 +130,7 @@ public class VanillaDb {
 		// the first transaction for initializing the system
 		Transaction initTx = txMgr.newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
+		initTx.certify();
 
 		/*
 		 * initialize the catalog manager to ensure the recovery process can get
@@ -153,7 +155,11 @@ public class VanillaDb {
 		txMgr.createCheckpoint(initTx);
 
 		// commit the initializing transaction
-		initTx.commit();
+		try {
+			initTx.commit();
+		} catch (ValidationFaildException e) {
+			e.printStackTrace();
+		}
 
 		// initializing checkpointing task
 		boolean doCheckpointing = CoreProperties.getLoader().getPropertyAsBoolean(

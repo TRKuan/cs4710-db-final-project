@@ -36,6 +36,7 @@ import org.vanilladb.core.storage.buffer.Buffer;
 import org.vanilladb.core.storage.file.BlockId;
 import org.vanilladb.core.storage.log.LogSeqNum;
 import org.vanilladb.core.storage.tx.concurrency.LockAbortException;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class TxTest {
 	private static Logger logger = Logger.getLogger(TxTest.class.getName());
@@ -71,7 +72,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testCommit() {
+	public void testCommit() throws ValidationFaildException {
 		// Tx1 write 9999 at 0
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
@@ -96,7 +97,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testRollback() {
+	public void testRollback() throws ValidationFaildException {
 		// Tx1 write 555 at 0
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
@@ -129,7 +130,7 @@ public class TxTest {
 	}
 
 	@Test
-	public void testEndStatement() {
+	public void testEndStatement() throws ValidationFaildException {
 		// RC-Tx1 releases locks when ending a statement
 		BlockId blk = new BlockId(FILE_NAME, 2);
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(
@@ -153,7 +154,7 @@ public class TxTest {
 		tx2.commit();
 		tx1.commit();
 	}
-
+/* This test does not make sense with the optimistic concurrent control, the concurrencyMgr will not affect the tx order
 	@Test
 	public void testConcurrency() {
 		TxClientA thA = new TxClientA(0, 600);
@@ -176,8 +177,9 @@ public class TxTest {
 				+ "Tx D: read 2 start\n" + "Tx D: read 2 end\n";
 		assertEquals("TxTest: bad tx history", expected, result);
 	}
-
-	@Test
+*/
+/*	This test does not make sense with the optimistic concurrent control since there is no lock hence no deadlock
+    @Test
 	public void testDeadlock() {
 		TxClientB thB = new TxClientB(0, 400);
 		thB.start();
@@ -196,10 +198,11 @@ public class TxTest {
 		assertTrue("TxTest: bad tx history", !thB.isDeadlockAborted());
 		assertTrue("TxTest: bad tx history", thC.isDeadlockAborted());
 	}
-
+*/
 	synchronized static void appendToResult(String s) {
 		result += s + "\n";
 	}
+
 }
 
 abstract class TxClient extends Thread {

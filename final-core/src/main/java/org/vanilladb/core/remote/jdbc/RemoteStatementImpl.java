@@ -21,6 +21,7 @@ import java.rmi.server.UnicastRemoteObject;
 import org.vanilladb.core.query.algebra.Plan;
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 /**
  * The RMI server-side implementation of RemoteStatement.
@@ -57,11 +58,12 @@ class RemoteStatementImpl extends UnicastRemoteObject implements
 	/**
 	 * Executes the specified SQL update command. The method sends the command
 	 * to the update planner, which executes it.
+	 * @throws Exception 
 	 * 
 	 * @see RemoteStatement#executeUpdate(java.lang.String)
 	 */
 	@Override
-	public int executeUpdate(String cmd) throws RemoteException {
+	public int executeUpdate(String cmd) throws RemoteException, ValidationFaildException {
 		try {
 			Transaction tx = rconn.getTransaction();
 			if (tx.isReadOnly())

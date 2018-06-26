@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.server.task.Task;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.util.CoreProperties;
 
 /**
@@ -59,17 +60,33 @@ public class CheckpointTask extends Task {
 			logger.info("Start creating checkpoint");
 		if (MY_METHOD == METHOD_MONITOR) {
 			if (VanillaDb.txMgr().getNextTxNum() - lastTxNum > TX_COUNT_TO_CHECKPOINT) {
-				Transaction tx = VanillaDb.txMgr().newTransaction(
-						Connection.TRANSACTION_SERIALIZABLE, false);
-				VanillaDb.txMgr().createCheckpoint(tx);
-				tx.commit();
+				boolean success = false;
+				while(!success) {
+					try {
+						Transaction tx = VanillaDb.txMgr().newTransaction(
+								Connection.TRANSACTION_SERIALIZABLE, false);
+						VanillaDb.txMgr().createCheckpoint(tx);
+						tx.commit();
+						success = true;
+					} catch (ValidationFaildException e) {
+						//normal
+					}
+				}
 				lastTxNum = VanillaDb.txMgr().getNextTxNum();
 			}
 		} else if (MY_METHOD == METHOD_PERIODIC) {
-			Transaction tx = VanillaDb.txMgr().newTransaction(
-					Connection.TRANSACTION_SERIALIZABLE, false);
-			VanillaDb.txMgr().createCheckpoint(tx);
-			tx.commit();
+			boolean success = false;
+			while(!success) {
+				try {
+					Transaction tx = VanillaDb.txMgr().newTransaction(
+							Connection.TRANSACTION_SERIALIZABLE, false);
+					VanillaDb.txMgr().createCheckpoint(tx);
+					tx.commit();
+					success = true;
+				} catch (ValidationFaildException e) {
+					//normal
+				}
+			}
 		}
 		if (logger.isLoggable(Level.INFO))
 			logger.info("A checkpoint created");

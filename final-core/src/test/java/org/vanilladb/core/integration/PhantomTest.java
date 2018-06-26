@@ -3,6 +3,7 @@ package org.vanilladb.core.integration;
 import java.sql.Connection;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,12 +21,13 @@ import org.vanilladb.core.storage.buffer.BufferConcurrencyTest;
 import org.vanilladb.core.storage.tx.Transaction;
 import org.vanilladb.core.storage.tx.TransactionMgr;
 import org.vanilladb.core.storage.tx.concurrency.LockAbortException;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class PhantomTest {
 private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getName());
 	
 	@BeforeClass
-	public static void init() {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(PhantomTest.class);
 		loadTestbed();
 		
@@ -39,7 +41,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 			logger.info("FINISH PHANTOM TEST");
 	}
 	
-	private static void loadTestbed() {
+	private static void loadTestbed() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, false);
 		Planner planner = VanillaDb.newPlanner();
@@ -112,23 +114,30 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 
 		@Override
 		public void run() {
-			try {
-				barrier.await();
-				phase1();
-				barrier.await();
-				phase2();
-				barrier.await();
-				phase3();
-				
-			} catch (Exception e) {
-				e.printStackTrace();
+			success = false;
+			while(!success){
+				try {
+					if(!barrier.isBroken())
+						barrier.await(200, TimeUnit.MILLISECONDS);
+					phase1();
+					if(!barrier.isBroken())
+						barrier.await(200, TimeUnit.MILLISECONDS);
+					phase2();
+					if(!barrier.isBroken())
+						barrier.await(200, TimeUnit.MILLISECONDS);
+					phase3();
+					success = true;
+				} catch (ValidationFaildException e) {
+					//normal
+				} catch (Exception e){
+					e.printStackTrace();
+				}
 			}
-			success = true;
 		}
 		
 		public void phase1() { };
-		public void phase2() { };
-		public void phase3() { };
+		public void phase2() throws ValidationFaildException { };
+		public void phase3() throws ValidationFaildException { };
 		
 		public boolean isSuccess() { return success; }
 	}
@@ -148,7 +157,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 		}
 		
 		@Override
-		public void phase3() {
+		public void phase3() throws ValidationFaildException {
 			Constant newMaxScore = queryMaxScore();
 			isSame = maxScore.equals(newMaxScore);
 			tx.commit();
@@ -176,7 +185,7 @@ private static Logger logger = Logger.getLogger(BufferConcurrencyTest.class.getN
 		}
 		
 		@Override
-		public void phase2() {
+		public void phase2() throws ValidationFaildException {
 			try {
 				Planner planner = VanillaDb.newPlanner();
 				planner.executeUpdate("UPDATE test SET age = 20 WHERE age = 23", tx);

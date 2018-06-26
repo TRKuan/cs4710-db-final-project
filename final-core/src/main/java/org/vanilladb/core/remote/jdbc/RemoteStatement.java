@@ -18,6 +18,8 @@ package org.vanilladb.core.remote.jdbc;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
+
 /**
  * The RMI remote interface corresponding to Statement. The methods are
  * identical to those of Statement, except that they throw RemoteExceptions
@@ -27,5 +29,5 @@ public interface RemoteStatement extends Remote {
 
 	RemoteResultSet executeQuery(String qry) throws RemoteException;
 
-	int executeUpdate(String cmd) throws RemoteException;
+	int executeUpdate(String cmd) throws RemoteException, ValidationFaildException;
 }

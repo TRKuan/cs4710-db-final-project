@@ -46,6 +46,7 @@ import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.metadata.TableInfo;
 import org.vanilladb.core.storage.record.RecordFile;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class HeuristicQueryPlannerTest {
 	private static Logger logger = Logger.getLogger(HeuristicQueryPlannerTest.class.getName());
@@ -74,7 +75,7 @@ public class HeuristicQueryPlannerTest {
 	}
 
 	@After
-	public void finishTx() {
+	public void finishTx() throws ValidationFaildException {
 		tx.commit();
 	}
 	

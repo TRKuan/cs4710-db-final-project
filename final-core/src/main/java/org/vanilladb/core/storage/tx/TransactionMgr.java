@@ -16,21 +16,21 @@
 package org.vanilladb.core.storage.tx;
 
 import java.lang.reflect.Constructor;
-import java.sql.Connection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.storage.buffer.BufferMgr;
 import org.vanilladb.core.storage.log.LogSeqNum;
 import org.vanilladb.core.storage.tx.concurrency.ConcurrencyMgr;
+import org.vanilladb.core.storage.tx.concurrency.OptimisticConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.ReadCommittedConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.RepeatableReadConcurrencyMgr;
 import org.vanilladb.core.storage.tx.concurrency.SerializableConcurrencyMgr;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.storage.tx.recovery.RecoveryMgr;
 import org.vanilladb.core.util.CoreProperties;
 
@@ -55,7 +55,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		recoveryMgrCls = CoreProperties.getLoader().getPropertyAsClass(TransactionMgr.class.getName() + ".RECOVERY_MGR",
 				RecoveryMgr.class, RecoveryMgr.class);
 	}
-
+	
 	// Optimization for preventing becoming bottleneck when creating a
 	// transaction
 	// XXX: There is a potential risk for overflowing here
@@ -65,7 +65,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 
 	// Old method for maintaining active transaction list
 	// When the above optimization ready, switch to that one
-	private Set<Long> activeTxs = new HashSet<Long>();
+	private Set<Long> activeTxs = new HashSet<Long>();	
 
 	private long nextTxNum = 0;
 	// Optimization: Use separate lock for nextTxNum
@@ -79,9 +79,16 @@ public class TransactionMgr implements TransactionLifecycleListener {
 	// public synchronized ArrayList<Transaction> getActiveTransactions() {
 	// return activeTxs;
 	// }
-
+	
 	@Override
-	public void onTxCommit(Transaction tx) {
+	public void onTxStart(Transaction tx) {
+		synchronized (this) {
+			activeTxs.add(tx.getTransactionNumber());
+		}
+	}
+	
+	@Override
+	public void onTxCommit(Transaction tx) throws ValidationFaildException {
 
 		// activeTxsLock.readLock().lock();
 		// try {
@@ -107,7 +114,6 @@ public class TransactionMgr implements TransactionLifecycleListener {
 
 		synchronized (this) {
 			activeTxs.remove(tx.getTransactionNumber());
-
 		}
 	}
 
@@ -205,8 +211,9 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		BufferMgr bufferMgr = new BufferMgr(txNum);
 
 		// Create a concurrency manager
+		ConcurrencyMgr concurMgr = new OptimisticConcurrencyMgr();
+		/*
 		ConcurrencyMgr concurMgr = null;
-
 		switch (isolationLevel) {
 		case Connection.TRANSACTION_SERIALIZABLE:
 			try {
@@ -241,7 +248,7 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		default:
 			throw new UnsupportedOperationException("unsupported isolation level");
 		}
-
+		*/
 		Transaction tx = new Transaction(this, concurMgr, recoveryMgr, bufferMgr, readOnly, txNum);
 
 		// activeTxsLock.readLock().lock();
@@ -251,9 +258,6 @@ public class TransactionMgr implements TransactionLifecycleListener {
 		// activeTxsLock.readLock().unlock();
 		// }
 
-		synchronized (this) {
-			activeTxs.add(tx.getTransactionNumber());
-		}
 		return tx;
 	}
 }

@@ -21,6 +21,10 @@ import org.vanilladb.core.storage.tx.Transaction;
 
 public class SerializableConcurrencyMgr extends ConcurrencyMgr {
 
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
+	
 	public SerializableConcurrencyMgr(long txNumber) {
 		txNum = txNumber;
 	}
@@ -73,6 +77,13 @@ public class SerializableConcurrencyMgr extends ConcurrencyMgr {
 		lockTbl.ixLock(recId.block().fileName(), txNum);
 		lockTbl.ixLock(recId.block(), txNum);
 		lockTbl.xLock(recId, txNum);
+	}
+	
+	@Override
+	public void shadowModifyRecord(RecordId recId){
+		lockTbl.ixLock(recId.block().fileName(), txNum);
+		lockTbl.ixLock(recId.block(), txNum);
+		lockTbl.shadowXLock(recId, txNum);
 	}
 
 	@Override

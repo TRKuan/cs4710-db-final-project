@@ -18,6 +18,8 @@ package org.vanilladb.core.util;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
+
 public abstract class BarrierStartRunner extends Thread {
 
 	private CyclicBarrier startBarrier;
@@ -32,11 +34,11 @@ public abstract class BarrierStartRunner extends Thread {
 
 	public abstract void runTask();
 
-	public void beforeTask() {
+	public void beforeTask() throws ValidationFaildException {
 
 	}
 
-	public void afterTask() {
+	public void afterTask() throws ValidationFaildException {
 
 	}
 

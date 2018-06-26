@@ -38,6 +38,7 @@ import org.vanilladb.core.sql.predicate.FieldNameExpression;
 import org.vanilladb.core.sql.predicate.Predicate;
 import org.vanilladb.core.sql.predicate.Term;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class BasicQueryTest {
 	private static Logger logger = Logger.getLogger(BasicQueryTest.class.getName());
@@ -58,7 +59,7 @@ public class BasicQueryTest {
 	}
 	
 	@Test
-	public void testTable() {
+	public void testTable() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p = new TablePlan("student", tx);
@@ -80,7 +81,7 @@ public class BasicQueryTest {
 	}
 
 	@Test
-	public void testSelect() {
+	public void testSelect() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p1 = new TablePlan("student", tx);
@@ -99,7 +100,7 @@ public class BasicQueryTest {
 	}
 
 	@Test
-	public void testProject() {
+	public void testProject() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p1 = new TablePlan("student", tx);
@@ -129,7 +130,7 @@ public class BasicQueryTest {
 	}
 
 	@Test
-	public void testProduct() {
+	public void testProduct() throws ValidationFaildException {
 		Transaction tx = VanillaDb.txMgr().newTransaction(
 				Connection.TRANSACTION_SERIALIZABLE, true);
 		Plan p1 = new TablePlan("student", tx);

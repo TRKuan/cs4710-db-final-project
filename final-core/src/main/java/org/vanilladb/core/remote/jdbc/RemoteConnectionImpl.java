@@ -21,6 +21,7 @@ import java.sql.Connection;
 
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.util.CoreProperties;
 
 /**
@@ -66,11 +67,12 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 
 	/**
 	 * Closes the connection. The current transaction is committed.
+	 * @throws Exception 
 	 * 
 	 * @see RemoteConnection#close()
 	 */
 	@Override
-	public void close() throws RemoteException {
+	public void close() throws ValidationFaildException {
 		tx.commit();
 	}
 
@@ -87,9 +89,10 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 	 * Sets this connection's auto-commit mode to the given state. The default
 	 * setting of auto-commit mode is true. This method may commit current
 	 * transaction and start a new transaction.
+	 * @throws Exception 
 	 */
 	@Override
-	public void setReadOnly(boolean readOnly) throws RemoteException {
+	public void setReadOnly(boolean readOnly) throws RemoteException, ValidationFaildException {
 		if (this.readOnly != readOnly) {
 			tx.commit();
 			this.readOnly = readOnly;
@@ -108,9 +111,10 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 	 * {@link Connection#TRANSACTION_SERIALIZABLE} and
 	 * {@link Connection#TRANSACTION_REPEATABLE_READ}. The auto-commit mode must
 	 * be set to false before calling this method.
+	 * @throws Exception 
 	 */
 	@Override
-	public void setTransactionIsolation(int level) throws RemoteException {
+	public void setTransactionIsolation(int level) throws RemoteException, ValidationFaildException {
 		if (getAutoCommit() != false)
 			throw new RemoteException(
 					"the auto-commit mode need to be set to false before changing the isolation level");
@@ -156,7 +160,7 @@ class RemoteConnectionImpl extends UnicastRemoteObject implements
 	 * @throws Exception
 	 */
 	@Override
-	public void commit() throws RemoteException {
+	public void commit() throws RemoteException, ValidationFaildException {
 		tx.commit();
 		try {
 			tx = VanillaDb.txMgr().newTransaction(isolationLevel, readOnly);

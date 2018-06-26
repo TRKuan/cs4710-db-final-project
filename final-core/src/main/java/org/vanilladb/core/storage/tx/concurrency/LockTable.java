@@ -45,7 +45,7 @@ class LockTable {
 	private static final long MAX_TIME;
 	private static final long EPSILON;
 	final static int IS_LOCK = 0, IX_LOCK = 1, S_LOCK = 2, SIX_LOCK = 3,
-			X_LOCK = 4;
+			X_LOCK = 4, SHADOW_X_LOCK = 5;
 
 	static {
 		MAX_TIME = CoreProperties.getLoader().getPropertyAsLong(
@@ -57,7 +57,7 @@ class LockTable {
 	class Lockers {
 		Set<Long> sLockers, ixLockers, isLockers, requestSet;
 		// only one tx can hold xLock(sixLock) on single item
-		long sixLocker, xLocker;
+		long sixLocker, xLocker, shadowXLocker;
 		static final long NONE = -1; // for sixLocker, xLocker
 
 		Lockers() {
@@ -66,13 +66,15 @@ class LockTable {
 			isLockers = new HashSet<Long>();
 			sixLocker = NONE;
 			xLocker = NONE;
+			shadowXLocker = NONE;
 			requestSet = new HashSet<Long>();
 		}
 		
 		@Override
 		public String toString() {
 			return "S: " + sLockers + ",IX: " + ixLockers + ",IS: " + isLockers
-					+ ",SIX: " + sixLocker + ",X: " + xLocker + ", request set: " + requestSet;
+					+ ",SIX: " + sixLocker + ",X: " + xLocker + ", ShadowX: " + shadowXLocker
+					+ ", request set: " + requestSet;
 		}
 	}
 
@@ -138,7 +140,8 @@ class LockTable {
 				}
 			}
 		}
-		if (lockType == S_LOCK || lockType == SIX_LOCK || lockType == X_LOCK) {
+		if (lockType == S_LOCK || lockType == SIX_LOCK || lockType == X_LOCK
+				|| lockType == SHADOW_X_LOCK) {
 			for (Long tx : lks.ixLockers) {
 				if (tx > txNum) {
 					txnsToBeAborted.add(tx);
@@ -157,7 +160,7 @@ class LockTable {
 			}
 		}
 		if (lockType == IX_LOCK || lockType == S_LOCK || lockType == SIX_LOCK
-				|| lockType == X_LOCK) {
+				|| lockType == X_LOCK || lockType == SHADOW_X_LOCK) {
 			if (lks.sixLocker > txNum) {
 				txnsToBeAborted.add(lks.sixLocker);
 				if (!toBeNotified.contains(lks.sixLocker))
@@ -168,6 +171,14 @@ class LockTable {
 			txnsToBeAborted.add(lks.xLocker);
 			if (!toBeNotified.contains(lks.xLocker))
 				toBeNotified.add(lks.xLocker);
+		}
+		if (lockType == IX_LOCK || lockType == SIX_LOCK	|| lockType == X_LOCK
+				|| lockType == SHADOW_X_LOCK) {
+			if (lks.shadowXLocker > txNum) {
+				txnsToBeAborted.add(lks.shadowXLocker);
+				if (!toBeNotified.contains(lks.shadowXLocker))
+					toBeNotified.add(lks.shadowXLocker);
+			}
 		}
 	}
 
@@ -371,6 +382,35 @@ class LockTable {
 		}
 		txWaitMap.remove(txNum);
 	}
+	
+	void shadowXLock(Object obj, long txNum) {
+		Object anchor = getAnchor(obj);
+		txWaitMap.put(txNum, anchor);
+		synchronized (anchor) {
+			Lockers lks = prepareLockers(obj);
+
+			if (hasShadowXLock(lks, txNum))
+				return;
+
+			try {
+				long timestamp = System.currentTimeMillis();
+				while (!shadowXLockable(lks, txNum) && !waitingTooLong(timestamp)) {
+					avoidDeadlock(lks, txNum, SHADOW_X_LOCK);
+					lks.requestSet.add(txNum);
+					
+					anchor.wait(MAX_TIME);
+					lks.requestSet.remove(txNum);
+				}
+				if (!shadowXLockable(lks, txNum))
+					throw new LockAbortException();
+				lks.shadowXLocker = txNum;
+				getObjectSet(txNum).add(obj);
+			} catch (InterruptedException e) {
+				throw new LockAbortException();
+			}
+		}
+		txWaitMap.remove(txNum);
+	}
 
 	/**
 	 * Releases the specified type of lock on an item holding by a transaction.
@@ -398,13 +438,13 @@ class LockTable {
 				// Check if this transaction have any other lock on this object
 				if (!hasSLock(lks, txNum) && !hasXLock(lks, txNum)
 						&& !hasSixLock(lks, txNum) && !hasIsLock(lks, txNum)
-						&& !hasIxLock(lks, txNum)) {
+						&& !hasIxLock(lks, txNum) && !hasShadowXLock(lks, txNum)) {
 					getObjectSet(txNum).remove(obj);
 
 					// Remove the locker, if there is no other transaction
 					// having it
 					if (!sLocked(lks) && !xLocked(lks) && !sixLocked(lks)
-							&& !isLocked(lks) && !ixLocked(lks)
+							&& !isLocked(lks) && !ixLocked(lks) && !shadowXLocked(lks)
 							&& lks.requestSet.isEmpty())
 						lockerMap.remove(obj);
 				}
@@ -439,18 +479,21 @@ class LockTable {
 
 					if (hasSixLock(lks, txNum))
 						releaseLock(lks, anchor, txNum, SIX_LOCK);
-
+					
 					while (hasIsLock(lks, txNum))
 						releaseLock(lks, anchor, txNum, IS_LOCK);
 
 					while (hasIxLock(lks, txNum) && !sLockOnly)
 						releaseLock(lks, anchor, txNum, IX_LOCK);
-
+					
+					if (hasShadowXLock(lks, txNum) && !sLockOnly)
+						releaseLock(lks, anchor, txNum, SHADOW_X_LOCK);
+					
 					// Remove the locker, if there is no other transaction
 					// having it
 					if (!sLocked(lks) && !xLocked(lks) && !sixLocked(lks)
 							&& !isLocked(lks) && !ixLocked(lks)
-							&& lks.requestSet.isEmpty())
+							&& !shadowXLocked(lks) && lks.requestSet.isEmpty())
 						lockerMap.remove(obj);
 				}
 			}
@@ -504,6 +547,13 @@ class LockTable {
 					anchor.notifyAll();
 			}
 			return;
+		case SHADOW_X_LOCK:
+			if (lks.shadowXLocker == txNum) {
+				lks.shadowXLocker = -1;
+				
+				anchor.notifyAll();
+			}
+			return;
 		default:
 			throw new IllegalArgumentException();
 		}
@@ -554,6 +604,10 @@ class LockTable {
 	private boolean ixLocked(Lockers lks) {
 		return lks != null && lks.ixLockers.size() > 0;
 	}
+	
+	private boolean shadowXLocked(Lockers lks) {
+		return lks != null && lks.shadowXLocker != -1;
+	}
 
 	/*
 	 * Verify if an item is held by a tx.
@@ -577,6 +631,10 @@ class LockTable {
 
 	private boolean hasIxLock(Lockers lks, long txNum) {
 		return lks != null && lks.ixLockers.contains(txNum);
+	}
+	
+	private boolean hasShadowXLock(Lockers lks, long txNUm) {
+		return lks != null && lks.shadowXLocker == txNUm;
 	}
 
 	private boolean isTheOnlySLocker(Lockers lks, long txNum) {
@@ -604,28 +662,38 @@ class LockTable {
 				&& (!ixLocked(lks) || isTheOnlyIxLocker(lks, txNum));
 	}
 
-	private boolean xLockable(Lockers lks, long txNum) {
-		return (!sLocked(lks) || isTheOnlySLocker(lks, txNum))
-				&& (!sixLocked(lks) || hasSixLock(lks, txNum))
-				&& (!ixLocked(lks) || isTheOnlyIxLocker(lks, txNum))
-				&& (!isLocked(lks) || isTheOnlyIsLocker(lks, txNum))
-				&& (!xLocked(lks) || hasXLock(lks, txNum));
-	}
-
 	private boolean sixLockable(Lockers lks, long txNum) {
 		return (!sixLocked(lks) || hasSixLock(lks, txNum))
 				&& (!ixLocked(lks) || isTheOnlyIxLocker(lks, txNum))
 				&& (!sLocked(lks) || isTheOnlySLocker(lks, txNum))
-				&& (!xLocked(lks) || hasXLock(lks, txNum));
+				&& (!xLocked(lks) || hasXLock(lks, txNum))
+				&& (!shadowXLocked(lks) || hasShadowXLock(lks, txNum));
 	}
 
 	private boolean ixLockable(Lockers lks, long txNum) {
 		return (!sLocked(lks) || isTheOnlySLocker(lks, txNum))
 				&& (!sixLocked(lks) || hasSixLock(lks, txNum))
-				&& (!xLocked(lks) || hasXLock(lks, txNum));
+				&& (!xLocked(lks) || hasXLock(lks, txNum))
+				&& (!shadowXLocked(lks) || hasShadowXLock(lks, txNum));
 	}
 
 	private boolean isLockable(Lockers lks, long txNum) {
 		return (!xLocked(lks) || hasXLock(lks, txNum));
+	}
+	
+	private boolean xLockable(Lockers lks, long txNum) {
+		return (!sLocked(lks) || isTheOnlySLocker(lks, txNum))
+				&& (!sixLocked(lks) || hasSixLock(lks, txNum))
+				&& (!ixLocked(lks) || isTheOnlyIxLocker(lks, txNum))
+				&& (!isLocked(lks) || isTheOnlyIsLocker(lks, txNum))
+				&& (!xLocked(lks) || hasXLock(lks, txNum))
+				&& (!shadowXLocked(lks) || hasShadowXLock(lks, txNum));
+	}
+
+	private boolean shadowXLockable(Lockers lks, long txNum) {
+		return (!sixLocked(lks) || hasSixLock(lks, txNum))
+				&& (!ixLocked(lks) || isTheOnlyIxLocker(lks, txNum))
+				&& (!xLocked(lks) || hasXLock(lks, txNum))
+				&& (!shadowXLocked(lks) || hasShadowXLock(lks, txNum));
 	}
 }

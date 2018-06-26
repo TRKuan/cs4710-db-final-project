@@ -21,6 +21,10 @@ import org.vanilladb.core.storage.tx.Transaction;
 
 public class RepeatableReadConcurrencyMgr extends ConcurrencyMgr {
 
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
+	
 	public RepeatableReadConcurrencyMgr(long txNumber) {
 		txNum = txNumber;
 	}
@@ -77,6 +81,13 @@ public class RepeatableReadConcurrencyMgr extends ConcurrencyMgr {
 		lockTbl.ixLock(recId.block().fileName(), txNum);
 		lockTbl.ixLock(recId.block(), txNum);
 		lockTbl.xLock(recId, txNum);
+	}
+	
+	@Override
+	public void shadowModifyRecord(RecordId recId){
+		lockTbl.ixLock(recId.block().fileName(), txNum);
+		lockTbl.ixLock(recId.block(), txNum);
+		lockTbl.shadowXLock(recId, txNum);
 	}
 
 	@Override

@@ -21,6 +21,10 @@ import org.vanilladb.core.storage.tx.Transaction;
 
 public class ReadCommittedConcurrencyMgr extends ConcurrencyMgr {
 
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
+	
 	public ReadCommittedConcurrencyMgr(long txNumber) {
 		txNum = txNumber;
 	}
@@ -98,6 +102,13 @@ public class ReadCommittedConcurrencyMgr extends ConcurrencyMgr {
 		lockTbl.sLock(recId, txNum);
 		// releases S lock to allow unrepeatable Read
 		lockTbl.release(recId, txNum, LockTable.S_LOCK);
+	}
+	
+	@Override
+	public void shadowModifyRecord(RecordId recId){
+		lockTbl.ixLock(recId.block().fileName(), txNum);
+		lockTbl.ixLock(recId.block(), txNum);
+		lockTbl.shadowXLock(recId, txNum);
 	}
 
 	@Override

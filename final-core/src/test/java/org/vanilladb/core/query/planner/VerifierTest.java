@@ -36,6 +36,7 @@ import org.vanilladb.core.query.parse.Parser;
 import org.vanilladb.core.server.ServerInit;
 import org.vanilladb.core.server.VanillaDb;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 
 public class VerifierTest {
 	private static Logger logger = Logger.getLogger(VerifierTest.class
@@ -70,7 +71,7 @@ public class VerifierTest {
 	}
 
 	@Test
-	public void testInsertData() {
+	public void testInsertData() throws ValidationFaildException {
 		// test nonexistent table name
 		try {
 			String qry = "insert into non (sid, sname, majorid, gradyear) values (6, 'kay', 21, 2000)";
@@ -110,7 +111,7 @@ public class VerifierTest {
 	}
 
 	@Test
-	public void testModifyData() {
+	public void testModifyData() throws ValidationFaildException {
 		// test nonexistent table name
 		try {
 			String qry = "update notexisted set gradyear = add(gradyear, 1) where sid = sid";
@@ -137,7 +138,7 @@ public class VerifierTest {
 	}
 
 	@Test
-	public void testDeleteData() {
+	public void testDeleteData() throws ValidationFaildException {
 		// test nonexistent table name
 		try {
 			String qry = "delete from notexisted where sid=sid";
@@ -152,7 +153,7 @@ public class VerifierTest {
 	}
 
 	@Test
-	public void testCreateTableData() {
+	public void testCreateTableData() throws ValidationFaildException {
 		// test existent table name
 		try {
 			String qry = "create table student (pid int, pname varchar(20))";
@@ -167,7 +168,7 @@ public class VerifierTest {
 	}
 
 	@Test
-	public void testCreateIndexData() {
+	public void testCreateIndexData() throws ValidationFaildException {
 		// test nonexistent table name
 		try {
 			String qry = "create index idx_student on nonexisted(gradyear)";
@@ -194,7 +195,7 @@ public class VerifierTest {
 	}
 
 	@Test
-	public void testCreateViewData() {
+	public void testCreateViewData() throws ValidationFaildException {
 		// test existent view name
 		try {
 			String qry = "create view student as select sname, dname from student, dept";

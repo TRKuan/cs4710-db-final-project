@@ -82,6 +82,10 @@ public class RecoveryMgr implements TransactionLifecycleListener {
 		if (!isReadOnly && enableLogging)
 			new StartRecord(txNum).writeToLog();
 	}
+	
+	@Override
+	public void onTxStart(Transaction tx) {		
+	}
 
 	/**
 	 * Writes a commit record to the log, and then flushes the log record to

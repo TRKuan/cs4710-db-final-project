@@ -50,6 +50,7 @@ import org.vanilladb.core.storage.metadata.CatalogMgr;
 import org.vanilladb.core.storage.metadata.index.IndexInfo;
 import org.vanilladb.core.storage.record.RecordId;
 import org.vanilladb.core.storage.tx.Transaction;
+import org.vanilladb.core.storage.tx.concurrency.ValidationFaildException;
 import org.vanilladb.core.util.BarrierStartRunner;
 
 public class RecoveryBasicTest {
@@ -62,7 +63,7 @@ public class RecoveryBasicTest {
 	private static BlockId blk;
 
 	@BeforeClass
-	public static void init() {
+	public static void init() throws ValidationFaildException {
 		ServerInit.init(RecoveryBasicTest.class);
 		
 		blk = new BlockId(fileName, 12);
@@ -92,7 +93,7 @@ public class RecoveryBasicTest {
 	}
 
 	@Before
-	public void setup() {
+	public void setup() throws ValidationFaildException {
 
 		// reset initial values in the block
 		// Dummy txNum
@@ -204,7 +205,7 @@ public class RecoveryBasicTest {
 		recoveryTx.bufferMgr().unpin(buff);
 	}
 	@Test
-	public void testCrashingDuringRecovery() {
+	public void testCrashingDuringRecovery() throws ValidationFaildException {
 
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 		Transaction tx2 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
@@ -276,7 +277,7 @@ public class RecoveryBasicTest {
 	}
 
 	@Test
-	public void testCrashingDuringRollBack() {
+	public void testCrashingDuringRollBack() throws ValidationFaildException {
 
 		Transaction tx1 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 		Transaction tx2 = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
@@ -349,7 +350,7 @@ public class RecoveryBasicTest {
 
 	}
 	@Test
-	public void testCheckpoint() {
+	public void testCheckpoint() throws ValidationFaildException {
 
 		CyclicBarrier startBarrier = new CyclicBarrier(5);
 		CyclicBarrier endBarrier = new CyclicBarrier(5);
@@ -437,7 +438,7 @@ public class RecoveryBasicTest {
 		}
 
 		@Override
-		public void beforeTask() {
+		public void beforeTask() throws ValidationFaildException {
 			tx = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 			txNum = tx.getTransactionNumber();
 			buff = tx.bufferMgr().pin(blk);
@@ -451,7 +452,7 @@ public class RecoveryBasicTest {
 		}
 
 		@Override
-		public void afterTask() {
+		public void afterTask() throws ValidationFaildException {
 			doSomething(afterTask);
 
 		}
@@ -461,7 +462,7 @@ public class RecoveryBasicTest {
 
 		}
 
-		private void doSomething(int order) {
+		private void doSomething(int order) throws ValidationFaildException {
 			switch (order) {
 			case 0:
 				// do not thing
@@ -477,7 +478,7 @@ public class RecoveryBasicTest {
 
 	}
 	@Test
-	public void testBTreeIndexRecovery() {
+	public void testBTreeIndexRecovery() throws ValidationFaildException {
 		// The first tx inserts records to the index
 		Transaction tx = VanillaDb.txMgr().newTransaction(Connection.TRANSACTION_SERIALIZABLE, false);
 		IndexInfo ii = md.getIndexInfo(dataTableName, "cid", tx).get(0);

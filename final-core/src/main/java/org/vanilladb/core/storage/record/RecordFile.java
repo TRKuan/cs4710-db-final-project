@@ -144,6 +144,11 @@ public class RecordFile implements Record {
 	 * @return the value at that field
 	 */
 	public Constant getVal(String fldName) {
+		Constant val;
+		val = tx.getVal(ti.tableName(), currentRecordId(), fldName);
+		tx.putReadVal(ti.tableName(), currentRecordId(), fldName);
+		if (val != null)
+			return val;
 		return rp.getVal(fldName);
 	}
 
@@ -164,7 +169,12 @@ public class RecordFile implements Record {
 		Constant v = val.castTo(fldType);
 		if (Page.size(v) > Page.maxSize(fldType))
 			throw new SchemaIncompatibleException();
-		rp.setVal(fldName, v);
+		if (!tx.certified() && !isTempTable()) {
+			tx.concurrencyMgr().shadowModifyRecord(currentRecordId());
+			tx.putWriteVal(ti.tableName(), currentRecordId(), fldName, v);
+		} else {
+			rp.setVal(fldName, v);
+		}
 	}
 
 	/**
